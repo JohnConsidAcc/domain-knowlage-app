@@ -23,7 +23,7 @@ Projects usually have a bunch of domain specific or inhouse terms together with 
 
 - Nuxt
 - Prisma
-- Postgres
+- Postgres via a docker container.
 - Vitest
 - Playwright
 - Self hosted OpenId/OAuth2 user management.
