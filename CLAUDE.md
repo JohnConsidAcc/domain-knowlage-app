@@ -13,11 +13,12 @@ Projects usually have a bunch of domain specific or inhouse terms together with 
 ## Key features
 
 - The main feature of this project is to show the user one "widget" at the time. Each widget will present some form of question to the user and provide some way of answeing it. After each answer the user will see if the answer is correct or not.
-- The most basic test is a question with multiple answers.
+- The most basic test is a question with multiple answers. When the user answers incorrectly, the correct answer must be clearly shown.
 - The user can access a personal page with different time period statistics.
 - The user can mark the question as incorrect, and it will no longer be shown to any user.
 - There is an interface to add new questions.
 - There is an interface where a user can go through the invalidated questions and correct or remove them.
+- There is a left-side expandable navigation menu that lets the user move between all pages in the application.
 
 ## Technology stack
 
@@ -34,6 +35,7 @@ Projects usually have a bunch of domain specific or inhouse terms together with 
 
 ## Rules
 
+- Always work via pull requests. Never push directly to the main branch.
 - Always ask before adding, removing or altering dependencies.
 - Vitest should have 100% code coverage.
 - Playwright should test all web related features (i.e. those available to the user).
