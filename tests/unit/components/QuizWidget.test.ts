@@ -19,7 +19,7 @@ describe('QuizWidget', () => {
 
   it('renders all answers as buttons', async () => {
     const wrapper = await mountSuspended(QuizWidget, { props: { question, result: null } })
-    const buttons = wrapper.findAll('button')
+    const buttons = wrapper.findAll('.answers button')
     expect(buttons).toHaveLength(2)
     expect(buttons[0].text()).toBe('3')
     expect(buttons[1].text()).toBe('4')
@@ -27,7 +27,7 @@ describe('QuizWidget', () => {
 
   it('emits answered with questionId and answerId on click', async () => {
     const wrapper = await mountSuspended(QuizWidget, { props: { question, result: null } })
-    await wrapper.findAll('button')[1].trigger('click')
+    await wrapper.findAll('.answers button')[1].trigger('click')
     expect(wrapper.emitted('answered')).toEqual([['q1', 'a2']])
   })
 
@@ -67,5 +67,18 @@ describe('QuizWidget', () => {
     const wrapper = await mountSuspended(QuizWidget, { props: { question, result: true } })
     await wrapper.find('.next-btn').trigger('click')
     expect(wrapper.emitted('next')).toHaveLength(1)
+  })
+
+  it('renders the invalidate button', async () => {
+    const wrapper = await mountSuspended(QuizWidget, { props: { question, result: null } })
+    const btn = wrapper.find('.invalidate-btn')
+    expect(btn.exists()).toBe(true)
+    expect(btn.text()).toContain('Report question as incorrect')
+  })
+
+  it('emits invalidate with questionId when invalidate button is clicked', async () => {
+    const wrapper = await mountSuspended(QuizWidget, { props: { question, result: null } })
+    await wrapper.find('.invalidate-btn').trigger('click')
+    expect(wrapper.emitted('invalidate')).toEqual([['q1']])
   })
 })

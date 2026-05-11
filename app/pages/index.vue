@@ -31,6 +31,14 @@ async function handleAnswered(questionId: string, answerId: string) {
   result.value = data.wasCorrect
 }
 
+async function handleInvalidate(questionId: string) {
+  await $fetch(`/api/questions/${questionId}`, {
+    method: 'PATCH',
+    body: { action: 'invalidate' },
+  })
+  loadNextQuestion()
+}
+
 onMounted(loadNextQuestion)
 </script>
 
@@ -44,6 +52,7 @@ onMounted(loadNextQuestion)
       :result="result"
       @answered="handleAnswered"
       @next="loadNextQuestion"
+      @invalidate="handleInvalidate"
     />
   </main>
 </template>
