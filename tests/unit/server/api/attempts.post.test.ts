@@ -46,13 +46,13 @@ describe('POST /api/attempts', () => {
     await expect(handler(mockEvent)).rejects.toMatchObject({ statusCode: 400 })
   })
 
-  it('records attempt and returns result', async () => {
+  it('records attempt and returns result including correctAnswerId', async () => {
     mockGetServerSession.mockResolvedValue({ user: { email: 'a@b.com', name: 'Alice' } })
     mockReadBody.mockResolvedValue({ questionId: 'q1', answerId: 'a1' })
     mockFindOrCreateUser.mockResolvedValue({ id: 'u1' })
-    mockRecordAttempt.mockResolvedValue({ wasCorrect: true })
+    mockRecordAttempt.mockResolvedValue({ wasCorrect: true, correctAnswerId: 'a1' })
     const result = await handler(mockEvent)
-    expect(result).toEqual({ wasCorrect: true })
+    expect(result).toEqual({ wasCorrect: true, correctAnswerId: 'a1' })
     expect(mockRecordAttempt).toHaveBeenCalledWith('u1', 'q1', 'a1')
   })
 })

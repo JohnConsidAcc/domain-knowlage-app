@@ -13,6 +13,7 @@ export interface QuizQuestion {
 const props = defineProps<{
   question: QuizQuestion
   result: boolean | null
+  correctAnswerId: string | null
 }>()
 
 const emit = defineEmits<{
@@ -44,7 +45,11 @@ async function handleInvalidate() {
       <li v-for="answer in question.answers" :key="answer.id">
         <button
           :disabled="result !== null"
-          :class="{ selected: selectedAnswerId === answer.id }"
+          :class="{
+            selected: selectedAnswerId === answer.id,
+            correct: result === false && answer.id === correctAnswerId,
+            incorrect: result === false && answer.id === selectedAnswerId && answer.id !== correctAnswerId,
+          }"
           @click="selectAnswer(answer.id)"
         >
           {{ answer.text }}

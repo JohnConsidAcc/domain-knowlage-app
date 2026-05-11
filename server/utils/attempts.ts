@@ -8,5 +8,8 @@ export async function recordAttempt(userId: string, questionId: string, answerId
   await prisma.userAttempt.create({
     data: { userId, questionId, wasCorrect: answer.isCorrect },
   })
-  return { wasCorrect: answer.isCorrect }
+  const correctAnswer = await prisma.answer.findFirst({
+    where: { questionId, isCorrect: true },
+  })
+  return { wasCorrect: answer.isCorrect, correctAnswerId: correctAnswer?.id ?? null }
 }

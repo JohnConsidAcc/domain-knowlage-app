@@ -3,12 +3,14 @@ import type { QuizQuestion } from '../components/QuizWidget.vue'
 
 const question = ref<QuizQuestion | null>(null)
 const result = ref<boolean | null>(null)
+const correctAnswerId = ref<string | null>(null)
 const loading = ref(true)
 const empty = ref(false)
 
 async function loadNextQuestion() {
   loading.value = true
   result.value = null
+  correctAnswerId.value = null
   question.value = null
   try {
     const data = await $fetch<QuizQuestion | null>('/api/questions/next')
@@ -24,11 +26,12 @@ async function loadNextQuestion() {
 }
 
 async function handleAnswered(questionId: string, answerId: string) {
-  const data = await $fetch<{ wasCorrect: boolean }>('/api/attempts', {
+  const data = await $fetch<{ wasCorrect: boolean; correctAnswerId: string | null }>('/api/attempts', {
     method: 'POST',
     body: { questionId, answerId },
   })
   result.value = data.wasCorrect
+  correctAnswerId.value = data.correctAnswerId
 }
 
 async function handleInvalidate(questionId: string) {
@@ -50,6 +53,7 @@ onMounted(loadNextQuestion)
       v-else-if="question"
       :question="question"
       :result="result"
+      :correct-answer-id="correctAnswerId"
       @answered="handleAnswered"
       @next="loadNextQuestion"
       @invalidate="handleInvalidate"
