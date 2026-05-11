@@ -18,14 +18,22 @@ const props = defineProps<{
 const emit = defineEmits<{
   answered: [questionId: string, answerId: string]
   next: []
+  invalidate: [questionId: string]
 }>()
 
 const selectedAnswerId = ref<string | null>(null)
+const invalidating = ref(false)
 
 function selectAnswer(answerId: string) {
+  /* v8 ignore next -- disabled buttons suppress click events in the test DOM */
   if (props.result !== null) return
   selectedAnswerId.value = answerId
   emit('answered', props.question.id, answerId)
+}
+
+async function handleInvalidate() {
+  invalidating.value = true
+  emit('invalidate', props.question.id)
 }
 </script>
 
@@ -47,6 +55,15 @@ function selectAnswer(answerId: string) {
       <span v-if="result" class="correct">Correct!</span>
       <span v-else class="incorrect">Incorrect</span>
       <button class="next-btn" @click="emit('next')">Next question</button>
+    </div>
+    <div class="actions">
+      <button
+        class="invalidate-btn"
+        :disabled="invalidating"
+        @click="handleInvalidate"
+      >
+        Report question as incorrect
+      </button>
     </div>
   </div>
 </template>

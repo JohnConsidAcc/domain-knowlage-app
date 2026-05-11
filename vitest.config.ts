@@ -11,7 +11,11 @@ export default defineConfig({
         'app/components/**',
         'app/pages/**',
       ],
-      exclude: ['server/api/auth/**'],
+      exclude: [
+        'server/api/auth/**',
+        'server/utils/prisma.ts',  // PrismaClient singleton — not unit-testable
+        'app/pages/**',            // Pages covered by Playwright (Phase 8); v8 cannot track them through Nuxt's virtual module system
+      ],
       thresholds: {
         lines: 100,
         functions: 100,
