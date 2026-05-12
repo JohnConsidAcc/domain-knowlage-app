@@ -8,6 +8,7 @@ describe('AppSidebar', () => {
     expect(wrapper.text()).toContain('Quiz')
     expect(wrapper.text()).toContain('Add question')
     expect(wrapper.text()).toContain('Review flagged')
+    expect(wrapper.text()).toContain('My statistics')
   })
 
   it('renders links with correct hrefs', async () => {
@@ -17,12 +18,13 @@ describe('AppSidebar', () => {
     expect(hrefs).toContain('/')
     expect(hrefs).toContain('/questions/add')
     expect(hrefs).toContain('/questions/review')
+    expect(hrefs).toContain('/stats')
   })
 
   it('starts expanded and shows labels', async () => {
     const wrapper = await mountSuspended(AppSidebar)
     expect(wrapper.find('nav').classes()).not.toContain('collapsed')
-    expect(wrapper.findAll('.link-label')).toHaveLength(3)
+    expect(wrapper.findAll('.link-label')).toHaveLength(4)
   })
 
   it('collapses when toggle button is clicked', async () => {
@@ -37,7 +39,7 @@ describe('AppSidebar', () => {
     await wrapper.find('.sidebar-toggle').trigger('click')
     await wrapper.find('.sidebar-toggle').trigger('click')
     expect(wrapper.find('nav').classes()).not.toContain('collapsed')
-    expect(wrapper.findAll('.link-label')).toHaveLength(3)
+    expect(wrapper.findAll('.link-label')).toHaveLength(4)
   })
 
   it('toggle button has correct aria-expanded attribute', async () => {
@@ -50,13 +52,13 @@ describe('AppSidebar', () => {
 
   it('renders icons for each link', async () => {
     const wrapper = await mountSuspended(AppSidebar)
-    expect(wrapper.findAll('.link-icon')).toHaveLength(3)
+    expect(wrapper.findAll('.link-icon')).toHaveLength(4)
   })
 
   it('icons remain visible when collapsed', async () => {
     const wrapper = await mountSuspended(AppSidebar)
     await wrapper.find('.sidebar-toggle').trigger('click')
-    expect(wrapper.findAll('.link-icon')).toHaveLength(3)
+    expect(wrapper.findAll('.link-icon')).toHaveLength(4)
   })
 
   it('nav has accessible aria-label', async () => {
