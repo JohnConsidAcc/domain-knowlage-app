@@ -9,6 +9,7 @@ const links = [
   { to: '/', label: 'Quiz', icon: '🎯' },
   { to: '/questions/add', label: 'Add question', icon: '➕' },
   { to: '/questions/review', label: 'Review flagged', icon: '🔍' },
+  { to: '/stats', label: 'My statistics', icon: '📊' },
 ]
 </script>
 
