@@ -48,7 +48,7 @@ async function submit() {
   <main>
     <h1>Add a question</h1>
     <div v-if="success" class="success">Question added successfully!</div>
-    <form @submit.prevent="submit">
+    <form novalidate @submit.prevent="submit">
       <div>
         <label>Question</label>
         <textarea v-model="prompt" rows="3" required />
