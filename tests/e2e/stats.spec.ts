@@ -1,0 +1,49 @@
+import { test, expect } from '@playwright/test'
+
+test.describe('Statistics page', () => {
+  test('shows the stats page heading', async ({ page }) => {
+    await page.goto('/stats')
+    await expect(page.locator('h1')).toContainText('My statistics')
+  })
+
+  test('shows four time period cards', async ({ page }) => {
+    await page.goto('/stats')
+    await expect(page.locator('.stat-card')).toHaveCount(4)
+  })
+
+  test('shows Today, This week, This month and All time labels', async ({ page }) => {
+    await page.goto('/stats')
+    await expect(page.locator('.period-label', { hasText: 'Today' })).toBeVisible()
+    await expect(page.locator('.period-label', { hasText: 'This week' })).toBeVisible()
+    await expect(page.locator('.period-label', { hasText: 'This month' })).toBeVisible()
+    await expect(page.locator('.period-label', { hasText: 'All time' })).toBeVisible()
+  })
+
+  test('each card shows an accuracy percentage and attempt counts', async ({ page }) => {
+    await page.goto('/stats')
+    const cards = page.locator('.stat-card')
+    const count = await cards.count()
+    for (let i = 0; i < count; i++) {
+      await expect(cards.nth(i).locator('.accuracy')).toBeVisible()
+      await expect(cards.nth(i).locator('.detail')).toContainText('correct')
+    }
+  })
+
+  test('stats update after answering a question', async ({ page }) => {
+    await page.goto('/stats')
+    const allTimeDetail = await page.locator('.stat-card').last().locator('.detail').textContent()
+    const before = parseInt(allTimeDetail?.match(/(\d+) \//)?.[1] ?? '0')
+
+    // Answer a quiz question
+    await page.goto('/')
+    await expect(page.locator('.answers button').first()).toBeVisible()
+    await page.locator('.answers button').first().click()
+    await expect(page.locator('.feedback')).toBeVisible()
+
+    // Check stats updated
+    await page.goto('/stats')
+    const updatedDetail = await page.locator('.stat-card').last().locator('.detail').textContent()
+    const after = parseInt(updatedDetail?.match(/(\d+) \//)?.[1] ?? '0')
+    expect(after).toBeGreaterThan(before)
+  })
+})
