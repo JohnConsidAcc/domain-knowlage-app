@@ -6,12 +6,14 @@ const result = ref<boolean | null>(null)
 const correctAnswerId = ref<string | null>(null)
 const loading = ref(true)
 const empty = ref(false)
+const error = ref<string | null>(null)
 
 async function loadNextQuestion() {
   loading.value = true
   result.value = null
   correctAnswerId.value = null
   question.value = null
+  error.value = null
   try {
     const data = await $fetch<QuizQuestion | null>('/api/questions/next')
     if (!data) {
@@ -20,26 +22,38 @@ async function loadNextQuestion() {
       question.value = data
       empty.value = false
     }
+  } catch {
+    error.value = 'Failed to load question. Please try again.'
   } finally {
     loading.value = false
   }
 }
 
 async function handleAnswered(questionId: string, answerId: string) {
-  const data = await $fetch<{ wasCorrect: boolean; correctAnswerId: string | null }>('/api/attempts', {
-    method: 'POST',
-    body: { questionId, answerId },
-  })
-  result.value = data.wasCorrect
-  correctAnswerId.value = data.correctAnswerId
+  error.value = null
+  try {
+    const data = await $fetch<{ wasCorrect: boolean; correctAnswerId: string | null }>('/api/attempts', {
+      method: 'POST',
+      body: { questionId, answerId },
+    })
+    result.value = data.wasCorrect
+    correctAnswerId.value = data.correctAnswerId
+  } catch {
+    error.value = 'Failed to record answer. Please try again.'
+  }
 }
 
 async function handleInvalidate(questionId: string) {
-  await $fetch(`/api/questions/${questionId}`, {
-    method: 'PATCH',
-    body: { action: 'invalidate' },
-  })
-  loadNextQuestion()
+  error.value = null
+  try {
+    await $fetch(`/api/questions/${questionId}`, {
+      method: 'PATCH',
+      body: { action: 'invalidate' },
+    })
+    loadNextQuestion()
+  } catch {
+    error.value = 'Failed to report question. Please try again.'
+  }
 }
 
 onMounted(loadNextQuestion)
@@ -48,15 +62,46 @@ onMounted(loadNextQuestion)
 <template>
   <main>
     <div v-if="loading">Loading…</div>
+    <div v-else-if="error && !question" class="error-banner">
+      {{ error }}
+      <button @click="loadNextQuestion">Retry</button>
+    </div>
     <div v-else-if="empty">No questions available.</div>
-    <QuizWidget
-      v-else-if="question"
-      :question="question"
-      :result="result"
-      :correct-answer-id="correctAnswerId"
-      @answered="handleAnswered"
-      @next="loadNextQuestion"
-      @invalidate="handleInvalidate"
-    />
+    <template v-else-if="question">
+      <div v-if="error" class="error-banner">{{ error }}</div>
+      <QuizWidget
+        :question="question"
+        :result="result"
+        :correct-answer-id="correctAnswerId"
+        @answered="handleAnswered"
+        @next="loadNextQuestion"
+        @invalidate="handleInvalidate"
+      />
+    </template>
   </main>
 </template>
+
+<style scoped>
+.error-banner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.error-banner button {
+  margin-left: auto;
+  background: #b91c1c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+</style>

@@ -75,6 +75,35 @@ test.describe('Review flagged questions', () => {
     await expect(page.locator('.question-item', { hasText: prompt })).not.toBeVisible()
   })
 
+  test('shows error banner when review API fails', async ({ page }) => {
+    await page.route('**/api/questions/invalidated', route => route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Internal Server Error' }),
+    }))
+    await page.goto('/questions/review')
+    await expect(page.getByText('Failed to load flagged questions')).toBeVisible()
+    await expect(page.locator('.question-list')).toHaveCount(0)
+  })
+
+  test('shows delete error when deletion fails', async ({ page, request }) => {
+    const prompt = `E2E delete error test ${Date.now()}`
+    await createFlaggedQuestion(request, prompt)
+
+    await page.goto('/questions/review')
+    await waitForHydration(page)
+
+    await page.route('**/api/questions/**', route => route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Delete failed' }),
+    }))
+
+    page.on('dialog', dialog => dialog.accept())
+    await page.locator('.question-item', { hasText: prompt }).locator('.delete-btn').click()
+    await expect(page.getByText('Failed to delete question')).toBeVisible()
+  })
+
   test('can delete a flagged question', async ({ page, request }) => {
     const prompt = `E2E delete test ${Date.now()}`
     await createFlaggedQuestion(request, prompt)

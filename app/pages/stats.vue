@@ -7,7 +7,7 @@ interface Stats {
   allTime: PeriodStats
 }
 
-const { data: stats } = await useFetch<Stats>('/api/stats')
+const { data: stats, pending, error } = useFetch<Stats>('/api/stats', { server: false })
 
 const periods = computed(() => stats.value
   ? [
@@ -22,7 +22,16 @@ const periods = computed(() => stats.value
 <template>
   <main>
     <h1>My statistics</h1>
-    <div v-if="stats" class="stats-grid">
+    <div v-if="pending" class="stats-grid" aria-busy="true" aria-label="Loading statistics">
+      <div v-for="n in 4" :key="n" class="skel-card">
+        <div class="skel-line skel-label" />
+        <div class="skel-line skel-number" />
+        <div class="skel-line skel-detail" />
+      </div>
+    </div>
+    <div v-else-if="error" class="error-banner">Failed to load statistics. Please refresh the page.</div>
+    <div v-else-if="!stats" class="error-banner">No statistics available.</div>
+    <div v-else class="stats-grid">
       <div v-for="period in periods" :key="period.label" class="stat-card">
         <h2 class="period-label">{{ period.label }}</h2>
         <p class="accuracy">{{ period.data.accuracy }}<span class="unit">%</span></p>
@@ -74,5 +83,40 @@ const periods = computed(() => stats.value
   font-size: 14px;
   color: #64748b;
   margin: 0;
+}
+
+.skel-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.skel-line {
+  background: #e2e8f0;
+  border-radius: 4px;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.skel-label { height: 14px; width: 55%; }
+.skel-number { height: 48px; width: 65%; }
+.skel-detail { height: 14px; width: 75%; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.error-banner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  padding: 12px 16px;
+  margin-top: 24px;
 }
 </style>
