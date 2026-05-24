@@ -1,4 +1,7 @@
 <script setup lang="ts">
+const props = defineProps<{ mobileOpen?: boolean }>()
+const emit = defineEmits<{ close: [] }>()
+
 const expanded = ref(true)
 
 function toggle() {
@@ -14,19 +17,40 @@ const links = [
 </script>
 
 <template>
-  <nav class="sidebar" :class="{ collapsed: !expanded }" aria-label="Main navigation">
-    <button class="sidebar-toggle" :aria-expanded="expanded" @click="toggle">
-      <span class="toggle-icon">{{ expanded ? '◀' : '▶' }}</span>
+  <nav
+    class="sidebar"
+    :class="{ collapsed: !expanded, 'mobile-open': mobileOpen }"
+    aria-label="Main navigation"
+  >
+    <button
+      class="sidebar-toggle"
+      :aria-expanded="expanded"
+      :aria-label="expanded ? 'Collapse sidebar' : 'Expand sidebar'"
+      @click="toggle"
+    >
+      <span class="toggle-icon" aria-hidden="true">{{ expanded ? '◀' : '▶' }}</span>
       <span v-if="expanded" class="toggle-label">Collapse</span>
     </button>
-    <ul class="sidebar-links">
+
+    <ul class="sidebar-links" role="list">
       <li v-for="link in links" :key="link.to">
-        <NuxtLink :to="link.to" class="sidebar-link" active-class="active">
+        <NuxtLink :to="link.to" class="sidebar-link" active-class="active" @click="emit('close')">
           <span class="link-icon" aria-hidden="true">{{ link.icon }}</span>
           <span v-if="expanded" class="link-label">{{ link.label }}</span>
+          <span v-else class="sr-only">{{ link.label }}</span>
         </NuxtLink>
       </li>
     </ul>
+
+    <!-- Close button shown only on mobile when open -->
+    <button
+      v-if="mobileOpen"
+      class="sidebar-close"
+      aria-label="Close navigation"
+      @click="emit('close')"
+    >
+      ✕
+    </button>
   </nav>
 </template>
 
@@ -34,35 +58,36 @@ const links = [
 .sidebar {
   display: flex;
   flex-direction: column;
-  width: 200px;
+  width: var(--sidebar-width);
   min-height: 100vh;
-  background: #1e293b;
-  color: #f1f5f9;
-  transition: width 0.2s ease;
+  background: var(--color-sidebar-bg);
+  color: var(--color-sidebar-text-hover);
+  transition: width var(--transition-normal);
   flex-shrink: 0;
 }
 
 .sidebar.collapsed {
-  width: 56px;
+  width: var(--sidebar-width-collapsed);
 }
 
 .sidebar-toggle {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 16px 14px;
+  gap: var(--space-2);
+  padding: var(--space-4) 14px;
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--color-sidebar-text);
   cursor: pointer;
   font-size: 14px;
   white-space: nowrap;
   width: 100%;
   text-align: left;
+  transition: color var(--transition-fast);
 }
 
 .sidebar-toggle:hover {
-  color: #f1f5f9;
+  color: var(--color-sidebar-text-hover);
 }
 
 .toggle-icon {
@@ -80,23 +105,23 @@ const links = [
 .sidebar-link {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  color: #94a3b8;
+  gap: var(--space-3);
+  padding: var(--space-3) 14px;
+  color: var(--color-sidebar-text);
   text-decoration: none;
   font-size: 14px;
   white-space: nowrap;
-  transition: background 0.15s, color 0.15s;
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 
 .sidebar-link:hover {
-  background: #334155;
-  color: #f1f5f9;
+  background: var(--color-sidebar-hover);
+  color: var(--color-sidebar-text-hover);
 }
 
 .sidebar-link.active {
-  background: #334155;
-  color: #38bdf8;
+  background: var(--color-sidebar-hover);
+  color: var(--color-sidebar-active);
 }
 
 .link-icon {
@@ -104,5 +129,48 @@ const links = [
   flex-shrink: 0;
   width: 24px;
   text-align: center;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.sidebar-close {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  background: none;
+  border: none;
+  color: var(--color-sidebar-text);
+  font-size: 18px;
+  padding: var(--space-1);
+  line-height: 1;
+}
+
+.sidebar-close:hover {
+  color: var(--color-sidebar-text-hover);
+}
+
+/* ── Mobile ── */
+@media (max-width: 640px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform var(--transition-normal);
+    width: var(--sidebar-width) !important; /* always full width on mobile */
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
 }
 </style>

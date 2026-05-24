@@ -45,60 +45,60 @@ const periods = computed(() => stats.value
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 24px;
-  margin-top: 24px;
+  gap: var(--space-6);
+  margin-top: var(--space-6);
 }
 
 .stat-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 24px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
   text-align: center;
 }
 
 .period-label {
   font-size: 14px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-3);
 }
 
 .accuracy {
   font-size: 48px;
   font-weight: 700;
-  color: #1e293b;
-  margin: 0 0 8px;
+  color: var(--color-text);
+  margin: 0 0 var(--space-2);
   line-height: 1;
 }
 
 .unit {
   font-size: 24px;
-  color: #64748b;
+  color: var(--color-text-secondary);
 }
 
 .detail {
   font-size: 14px;
-  color: #64748b;
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
 .skel-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 24px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2);
 }
 
 .skel-line {
-  background: #e2e8f0;
-  border-radius: 4px;
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
   animation: pulse 1.4s ease-in-out infinite;
 }
 
@@ -112,11 +112,18 @@ const periods = computed(() => stats.value
 }
 
 .error-banner {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  color: #b91c1c;
-  padding: 12px 16px;
-  margin-top: 24px;
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-md);
+  color: var(--color-error-text);
+  padding: var(--space-3) var(--space-4);
+  margin-top: var(--space-6);
+}
+
+@media (max-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+  }
 }
 </style>

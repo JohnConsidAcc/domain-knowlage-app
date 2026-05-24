@@ -100,7 +100,7 @@ describe('Review flagged questions page', () => {
     const wrapper = await mountSuspended(ReviewPage)
     await wrapper.find('.item-actions button').trigger('click')
     // Add a 3rd answer — it starts with empty text
-    await wrapper.find('.edit-form > button').trigger('click')
+    await wrapper.find('.edit-answers-fieldset > button').trigger('click')
     const saveBtn = wrapper.findAll('.edit-actions button')[0]
     await saveBtn.trigger('click')
     expect(wrapper.text()).toContain('All answers must have text')
@@ -181,7 +181,7 @@ describe('Review flagged questions page', () => {
     const initialRows = wrapper.findAll('.answer-row').length
 
     // Add answer
-    await wrapper.find('.edit-form > button').trigger('click')
+    await wrapper.find('.edit-answers-fieldset > button').trigger('click')
     expect(wrapper.findAll('.answer-row')).toHaveLength(initialRows + 1)
 
     // Remove the newly added answer

@@ -65,4 +65,25 @@ describe('AppSidebar', () => {
     const wrapper = await mountSuspended(AppSidebar)
     expect(wrapper.find('nav').attributes('aria-label')).toBe('Main navigation')
   })
+
+  it('applies mobile-open class when mobileOpen prop is true', async () => {
+    const wrapper = await mountSuspended(AppSidebar, { props: { mobileOpen: true } })
+    expect(wrapper.find('nav').classes()).toContain('mobile-open')
+  })
+
+  it('shows close button when mobileOpen prop is true', async () => {
+    const wrapper = await mountSuspended(AppSidebar, { props: { mobileOpen: true } })
+    expect(wrapper.find('.sidebar-close').exists()).toBe(true)
+  })
+
+  it('emits close when close button is clicked', async () => {
+    const wrapper = await mountSuspended(AppSidebar, { props: { mobileOpen: true } })
+    await wrapper.find('.sidebar-close').trigger('click')
+    expect(wrapper.emitted('close')).toHaveLength(1)
+  })
+
+  it('does not show close button when mobileOpen is false', async () => {
+    const wrapper = await mountSuspended(AppSidebar, { props: { mobileOpen: false } })
+    expect(wrapper.find('.sidebar-close').exists()).toBe(false)
+  })
 })

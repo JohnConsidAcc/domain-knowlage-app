@@ -82,18 +82,39 @@ async function remove(id: string) {
     <template v-else>
       <div v-if="deleteError" class="error-banner">{{ deleteError }}</div>
       <p v-if="!questions?.length">No flagged questions — everything looks good!</p>
-      <ul v-else class="question-list">
+      <ul v-else class="question-list" role="list">
         <li v-for="q in questions" :key="q.id" class="question-item">
           <template v-if="editing === q.id">
-            <div class="edit-form">
-              <textarea v-model="editPrompt" rows="3" />
-              <div v-for="(a, i) in editAnswers" :key="i" class="answer-row">
-                <input type="radio" :name="`correct-${q.id}`" :checked="a.isCorrect" @change="setCorrect(i)" />
-                <input v-model="a.text" type="text" />
-                <button type="button" :disabled="editAnswers.length <= 2" @click="removeAnswer(i)">Remove</button>
-              </div>
-              <button type="button" @click="addAnswer">+ Add answer</button>
-              <div v-if="error" class="error">{{ error }}</div>
+            <div class="edit-form" role="form" :aria-label="`Edit question: ${q.prompt}`">
+              <label :for="`edit-prompt-${q.id}`" class="field-label">Question prompt</label>
+              <textarea :id="`edit-prompt-${q.id}`" v-model="editPrompt" rows="3" />
+              <fieldset class="edit-answers-fieldset">
+                <legend class="field-label">Answers <small>(select the correct one)</small></legend>
+                <div v-for="(a, i) in editAnswers" :key="i" class="answer-row">
+                  <input
+                    type="radio"
+                    :name="`correct-${q.id}`"
+                    :checked="a.isCorrect"
+                    :aria-label="`Mark answer ${i + 1} as correct`"
+                    @change="setCorrect(i)"
+                  />
+                  <input
+                    v-model="a.text"
+                    type="text"
+                    :aria-label="`Answer ${i + 1} text`"
+                  />
+                  <button
+                    type="button"
+                    :disabled="editAnswers.length <= 2"
+                    :aria-label="`Remove answer ${i + 1}`"
+                    @click="removeAnswer(i)"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <button type="button" @click="addAnswer">+ Add answer</button>
+              </fieldset>
+              <div v-if="error" role="alert" class="error msg-error">{{ error }}</div>
               <div class="edit-actions">
                 <button :disabled="submitting" @click="saveCorrection(q.id)">Save</button>
                 <button @click="cancelEdit">Cancel</button>
@@ -102,7 +123,7 @@ async function remove(id: string) {
           </template>
           <template v-else>
             <p class="question-prompt">{{ q.prompt }}</p>
-            <ul class="answer-list">
+            <ul class="answer-list" role="list">
               <li v-for="a in q.answers" :key="a.id" :class="{ correct: a.isCorrect }">
                 {{ a.text }}
               </li>
@@ -115,40 +136,40 @@ async function remove(id: string) {
         </li>
       </ul>
     </template>
-    <NuxtLink to="/">← Back to quiz</NuxtLink>
+    <NuxtLink to="/" class="back-link">← Back to quiz</NuxtLink>
   </main>
 </template>
 
 <style scoped>
 .error-banner {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  color: #b91c1c;
-  padding: 12px 16px;
-  margin-bottom: 16px;
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-md);
+  color: var(--color-error-text);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .skel-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .skel-item {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 16px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .skel-line {
-  background: #e2e8f0;
-  border-radius: 4px;
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
   animation: pulse 1.4s ease-in-out infinite;
 }
 
@@ -158,5 +179,141 @@ async function remove(id: string) {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
+}
+
+.question-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.question-item {
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+
+.question-prompt {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text);
+  margin: 0 0 var(--space-3);
+}
+
+.answer-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.answer-list li {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.answer-list li.correct {
+  color: #15803d;
+  font-weight: 600;
+  background: #f0fdf4;
+}
+
+.item-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.item-actions button {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  padding: var(--space-1) var(--space-3);
+  font-size: 13px;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.item-actions button:hover {
+  color: var(--color-text);
+  border-color: var(--color-text);
+}
+
+.delete-btn:hover {
+  color: var(--color-error-text) !important;
+  border-color: var(--color-error-border) !important;
+}
+
+.field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.edit-answers-fieldset {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.answer-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.edit-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.edit-actions button {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  font-size: 14px;
+  background: none;
+  color: var(--color-text-secondary);
+}
+
+.edit-actions button:first-child {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+  font-weight: 500;
+}
+
+.edit-actions button:first-child:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.back-link {
+  display: inline-block;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover {
+  color: var(--color-text);
 }
 </style>
