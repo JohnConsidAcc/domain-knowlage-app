@@ -29,6 +29,17 @@ test.describe('Statistics page', () => {
     }
   })
 
+  test('shows error banner when stats API fails', async ({ page }) => {
+    await page.route('**/api/stats', route => route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Internal Server Error' }),
+    }))
+    await page.goto('/stats')
+    await expect(page.getByText('Failed to load statistics')).toBeVisible()
+    await expect(page.locator('.stat-card')).toHaveCount(0)
+  })
+
   test('stats update after answering a question', async ({ page }) => {
     await page.goto('/stats')
     const allTimeDetail = await page.locator('.stat-card').last().locator('.detail').textContent()

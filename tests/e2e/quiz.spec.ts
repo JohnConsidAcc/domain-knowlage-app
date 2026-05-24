@@ -78,6 +78,17 @@ test.describe('Quiz', () => {
     await expect(page.locator('.next-btn')).not.toBeVisible()
   })
 
+  test('shows error banner when question API fails', async ({ page }) => {
+    await page.route('**/api/questions/next', route => route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Internal Server Error' }),
+    }))
+    await page.goto('/')
+    await expect(page.getByText('Failed to load question')).toBeVisible()
+    await expect(page.locator('.answers')).toHaveCount(0)
+  })
+
   test('Report question button invalidates the question and loads the next one', async ({ page }) => {
     await page.goto('/')
     const firstPrompt = await page.locator('.prompt').textContent()

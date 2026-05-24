@@ -28,7 +28,7 @@ describe('Review flagged questions page', () => {
   beforeEach(() => {
     mockFetch.mockReset()
     mockRefresh.mockReset()
-    mockUseFetch.mockReturnValue({ data: ref(sampleQuestions), refresh: mockRefresh })
+    mockUseFetch.mockReturnValue({ data: ref(sampleQuestions), refresh: mockRefresh, pending: ref(false), error: ref(null) })
   })
 
   it('renders the page heading', async () => {
@@ -37,9 +37,23 @@ describe('Review flagged questions page', () => {
   })
 
   it('shows empty message when no flagged questions', async () => {
-    mockUseFetch.mockReturnValue({ data: ref([]), refresh: mockRefresh })
+    mockUseFetch.mockReturnValue({ data: ref([]), refresh: mockRefresh, pending: ref(false), error: ref(null) })
     const wrapper = await mountSuspended(ReviewPage)
     expect(wrapper.text()).toContain('No flagged questions')
+  })
+
+  it('shows loading skeleton while pending', async () => {
+    mockUseFetch.mockReturnValue({ data: ref(null), refresh: mockRefresh, pending: ref(true), error: ref(null) })
+    const wrapper = await mountSuspended(ReviewPage)
+    expect(wrapper.find('.skel-list').exists()).toBe(true)
+    expect(wrapper.find('.question-list').exists()).toBe(false)
+  })
+
+  it('shows fetch error banner when initial load fails', async () => {
+    mockUseFetch.mockReturnValue({ data: ref(null), refresh: mockRefresh, pending: ref(false), error: ref({ message: 'Network error' }) })
+    const wrapper = await mountSuspended(ReviewPage)
+    expect(wrapper.text()).toContain('Failed to load flagged questions')
+    expect(wrapper.find('.question-list').exists()).toBe(false)
   })
 
   it('renders flagged questions', async () => {
@@ -135,6 +149,18 @@ describe('Review flagged questions page', () => {
     await wrapper.vm.$nextTick()
     expect(mockFetch).toHaveBeenCalledWith('/api/questions/q1', { method: 'DELETE' })
     expect(mockRefresh).toHaveBeenCalled()
+    vi.unstubAllGlobals()
+    vi.stubGlobal('$fetch', mockFetch)
+  })
+
+  it('shows delete error banner when delete fails', async () => {
+    vi.stubGlobal('confirm', vi.fn(() => true))
+    mockFetch.mockRejectedValue(new Error('Network error'))
+    const wrapper = await mountSuspended(ReviewPage)
+    const deleteBtn = wrapper.find('.delete-btn')
+    await deleteBtn.trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.text()).toContain('Failed to delete question')
     vi.unstubAllGlobals()
     vi.stubGlobal('$fetch', mockFetch)
   })
