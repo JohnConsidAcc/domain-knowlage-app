@@ -1,6 +1,9 @@
-import { describe, it, expect } from 'vitest'
-import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { describe, it, expect, vi } from 'vitest'
+import { mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
 import AppSidebar from '~/components/AppSidebar.vue'
+
+const mockSignOut = vi.fn()
+mockNuxtImport('useAuth', () => () => ({ signOut: mockSignOut }))
 
 describe('AppSidebar', () => {
   it('renders navigation links', async () => {
@@ -89,5 +92,30 @@ describe('AppSidebar', () => {
   it('does not show close button when mobileOpen is false', async () => {
     const wrapper = await mountSuspended(AppSidebar, { props: { mobileOpen: false } })
     expect(wrapper.find('.sidebar-close').exists()).toBe(false)
+  })
+
+  it('renders the sign-out button', async () => {
+    const wrapper = await mountSuspended(AppSidebar)
+    expect(wrapper.find('.sidebar-signout').exists()).toBe(true)
+  })
+
+  it('sign-out button shows label when expanded', async () => {
+    const wrapper = await mountSuspended(AppSidebar)
+    expect(wrapper.find('.signout-label').exists()).toBe(true)
+    expect(wrapper.find('.signout-label').text()).toBe('Sign out')
+  })
+
+  it('sign-out button hides label when collapsed', async () => {
+    const wrapper = await mountSuspended(AppSidebar)
+    await wrapper.find('.sidebar-toggle').trigger('click')
+    expect(wrapper.find('.signout-label').exists()).toBe(false)
+    expect(wrapper.find('.sidebar-signout .sr-only').exists()).toBe(true)
+  })
+
+  it('clicking sign-out calls signOut', async () => {
+    mockSignOut.mockReset()
+    const wrapper = await mountSuspended(AppSidebar)
+    await wrapper.find('.sidebar-signout').trigger('click')
+    expect(mockSignOut).toHaveBeenCalledOnce()
   })
 })

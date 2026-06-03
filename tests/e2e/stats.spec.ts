@@ -40,6 +40,36 @@ test.describe('Statistics page', () => {
     await expect(page.locator('.stat-card')).toHaveCount(0)
   })
 
+  test('shows a reset progress button', async ({ page }) => {
+    await page.goto('/stats')
+    await expect(page.locator('.reset-btn')).toBeVisible()
+    await expect(page.locator('.reset-btn')).toContainText('Reset my progress')
+  })
+
+  test('cancelling the confirm dialog does not reset stats', async ({ page }) => {
+    await page.goto('/stats')
+    page.on('dialog', dialog => dialog.dismiss())
+    await page.locator('.reset-btn').click()
+    // Stats grid should still be visible — nothing was cleared
+    await expect(page.locator('.stat-card')).toHaveCount(4)
+  })
+
+  test('confirming reset clears all attempts and shows success message', async ({ page }) => {
+    // First answer a question so there is something to reset
+    await page.goto('/')
+    await page.locator('.answers button').first().click()
+    await expect(page.locator('.feedback')).toBeVisible()
+
+    await page.goto('/stats')
+    page.on('dialog', dialog => dialog.accept())
+    await page.locator('.reset-btn').click()
+    await expect(page.getByText('Progress reset successfully')).toBeVisible()
+
+    // All time total should now be 0
+    const allTimeDetail = await page.locator('.stat-card').last().locator('.detail').textContent()
+    expect(allTimeDetail).toContain('0 / 0 correct')
+  })
+
   test('stats update after answering a question', async ({ page }) => {
     await page.goto('/stats')
     const allTimeDetail = await page.locator('.stat-card').last().locator('.detail').textContent()

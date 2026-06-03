@@ -7,7 +7,7 @@ interface Stats {
   allTime: PeriodStats
 }
 
-const { data: stats, pending, error } = useFetch<Stats>('/api/stats', { server: false })
+const { data: stats, pending, error, refresh } = useFetch<Stats>('/api/stats', { server: false })
 
 const periods = computed(() => stats.value
   ? [
@@ -17,6 +17,33 @@ const periods = computed(() => stats.value
       { label: 'All time', data: stats.value.allTime },
     ]
   : [])
+
+const resetting = ref(false)
+const resetError = ref<string | null>(null)
+const resetSuccess = ref(false)
+
+async function resetProgress() {
+  const confirmed = confirm('This will permanently delete all your quiz history. Continue?')
+  if (!confirmed) return
+
+  resetting.value = true
+  resetError.value = null
+  resetSuccess.value = false
+
+  try {
+    await $fetch('/api/attempts', { method: 'DELETE' })
+    resetSuccess.value = true
+    await refresh()
+    setTimeout(() => { resetSuccess.value = false }, 3000)
+  }
+  catch (err: unknown) {
+    const fetchError = err as { data?: { message?: string }; message?: string }
+    resetError.value = fetchError?.data?.message ?? fetchError?.message ?? 'Something went wrong'
+  }
+  finally {
+    resetting.value = false
+  }
+}
 </script>
 
 <template>
@@ -37,6 +64,13 @@ const periods = computed(() => stats.value
         <p class="accuracy">{{ period.data.accuracy }}<span class="unit">%</span></p>
         <p class="detail">{{ period.data.correct }} / {{ period.data.total }} correct</p>
       </div>
+    </div>
+    <div class="reset-section">
+      <p v-if="resetSuccess" class="msg-success">Progress reset successfully.</p>
+      <p v-if="resetError" class="msg-error">{{ resetError }}</p>
+      <button class="reset-btn" :disabled="resetting" @click="resetProgress">
+        {{ resetting ? 'Resetting…' : 'Reset my progress' }}
+      </button>
     </div>
   </main>
 </template>
@@ -125,5 +159,22 @@ const periods = computed(() => stats.value
     grid-template-columns: repeat(2, 1fr);
     gap: var(--space-4);
   }
+}
+
+.reset-section {
+  margin-top: var(--space-8);
+}
+
+.reset-btn {
+  background: none;
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-md);
+  color: var(--color-error-text);
+  padding: var(--space-2) var(--space-4);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.reset-btn:hover:not(:disabled) {
+  background: var(--color-error-bg);
 }
 </style>

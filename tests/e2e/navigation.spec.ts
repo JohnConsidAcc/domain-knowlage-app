@@ -78,4 +78,15 @@ test.describe('Sidebar navigation', () => {
     await expect(page.locator('.link-label').first()).toBeVisible()
     await expect(page.locator('.sidebar')).not.toHaveClass(/collapsed/)
   })
+
+  test('sidebar shows a sign-out button', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.locator('.sidebar-signout')).toBeVisible()
+  })
+
+  test('clicking sign-out redirects to the sign-in page', async ({ page }) => {
+    await page.goto('/')
+    await page.locator('.sidebar-signout').click()
+    await expect(page).toHaveURL(/auth\/signin|login|keycloak|localhost:8080/, { timeout: 15_000 })
+  })
 })

@@ -16,6 +16,8 @@ const links = [
   { to: '/questions/review', label: 'Review flagged', icon: '🔍' },
   { to: '/stats', label: 'My statistics', icon: '📊' },
 ]
+
+const { signOut } = useAuth()
 </script>
 
 <template>
@@ -43,6 +45,12 @@ const links = [
         </NuxtLink>
       </li>
     </ul>
+
+    <button class="sidebar-signout" aria-label="Sign out" @click="signOut()">
+      <span class="signout-icon" aria-hidden="true">→|</span>
+      <span v-if="expanded" class="signout-label">Sign out</span>
+      <span v-else class="sr-only">Sign out</span>
+    </button>
 
     <!-- Close button shown only on mobile when open -->
     <button
@@ -140,6 +148,34 @@ const links = [
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
+}
+
+.sidebar-signout {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 14px;
+  background: none;
+  border: none;
+  color: var(--color-sidebar-text);
+  font-size: 14px;
+  white-space: nowrap;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.sidebar-signout:hover {
+  background: var(--color-sidebar-hover);
+  color: var(--color-sidebar-text-hover);
+}
+
+.signout-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
 }
 
 .sidebar-close {
