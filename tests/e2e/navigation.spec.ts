@@ -22,6 +22,11 @@ test.describe('Sidebar navigation', () => {
     await expect(page.locator('.sidebar')).toBeVisible()
   })
 
+  test('sidebar is visible on the study page', async ({ page }) => {
+    await page.goto('/study')
+    await expect(page.locator('.sidebar')).toBeVisible()
+  })
+
   test('Quiz link navigates to the quiz page', async ({ page }) => {
     await page.goto('/stats')
     await page.locator('.sidebar-link', { hasText: 'Quiz' }).click()
@@ -40,6 +45,13 @@ test.describe('Sidebar navigation', () => {
     await page.locator('.sidebar-link', { hasText: 'Review flagged' }).click()
     await expect(page).toHaveURL('/questions/review')
     await expect(page.locator('h1')).toContainText('Review flagged questions')
+  })
+
+  test('Study mode link navigates to the study page', async ({ page }) => {
+    await page.goto('/')
+    await page.locator('.sidebar-link', { hasText: 'Study mode' }).click()
+    await expect(page).toHaveURL('/study')
+    await expect(page.locator('h1')).toContainText('Study mode')
   })
 
   test('My statistics link navigates to the stats page', async ({ page }) => {
