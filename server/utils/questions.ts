@@ -75,3 +75,11 @@ export async function deleteQuestion(id: string) {
   await prisma.userAttempt.deleteMany({ where: { questionId: id } })
   return prisma.question.delete({ where: { id } })
 }
+
+export async function getAllQuestions() {
+  return prisma.question.findMany({
+    where: { isInvalidated: false },
+    include: { answers: { select: { id: true, text: true, isCorrect: true } } },
+    orderBy: { createdAt: 'desc' },
+  })
+}
