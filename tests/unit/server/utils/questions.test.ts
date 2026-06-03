@@ -27,6 +27,7 @@ const {
   getInvalidatedQuestions,
   updateQuestion,
   deleteQuestion,
+  getAllQuestions,
 } = await import('../../../../server/utils/questions')
 
 describe('getNextQuestion', () => {
@@ -153,6 +154,29 @@ describe('updateQuestion', () => {
       data: { prompt: 'Updated', isInvalidated: false },
       include: { answers: true },
     })
+  })
+})
+
+describe('getAllQuestions', () => {
+  beforeEach(() => mockFindMany.mockReset())
+
+  it('returns non-invalidated questions ordered by createdAt desc', async () => {
+    const questions = [
+      { id: 'q1', isInvalidated: false, answers: [{ id: 'a1', text: 'A', isCorrect: true }] },
+    ]
+    mockFindMany.mockResolvedValue(questions)
+    const result = await getAllQuestions()
+    expect(result).toEqual(questions)
+    expect(mockFindMany).toHaveBeenCalledWith({
+      where: { isInvalidated: false },
+      include: { answers: { select: { id: true, text: true, isCorrect: true } } },
+      orderBy: { createdAt: 'desc' },
+    })
+  })
+
+  it('returns empty array when no questions exist', async () => {
+    mockFindMany.mockResolvedValue([])
+    expect(await getAllQuestions()).toEqual([])
   })
 })
 
