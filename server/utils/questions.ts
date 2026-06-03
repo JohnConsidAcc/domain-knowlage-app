@@ -1,5 +1,13 @@
 import { prisma } from './prisma'
 
+export async function getAllStudyQuestions() {
+  return prisma.question.findMany({
+    where: { isInvalidated: false },
+    include: { answers: { select: { id: true, text: true, isCorrect: true } } },
+    orderBy: { createdAt: 'asc' },
+  })
+}
+
 export async function getNextQuestion() {
   const questions = await prisma.question.findMany({
     where: { isInvalidated: false },

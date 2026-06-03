@@ -21,6 +21,7 @@ vi.mock('../../../../server/utils/prisma', () => ({
 }))
 
 const {
+  getAllStudyQuestions,
   getNextQuestion,
   createQuestion,
   invalidateQuestion,
@@ -28,6 +29,30 @@ const {
   updateQuestion,
   deleteQuestion,
 } = await import('../../../../server/utils/questions')
+
+describe('getAllStudyQuestions', () => {
+  beforeEach(() => mockFindMany.mockReset())
+
+  it('returns all non-invalidated questions ordered by createdAt asc', async () => {
+    const questions = [
+      { id: 'q1', prompt: 'Q1', answers: [{ id: 'a1', text: 'A', isCorrect: true }] },
+      { id: 'q2', prompt: 'Q2', answers: [{ id: 'a2', text: 'B', isCorrect: false }] },
+    ]
+    mockFindMany.mockResolvedValue(questions)
+    const result = await getAllStudyQuestions()
+    expect(result).toEqual(questions)
+    expect(mockFindMany).toHaveBeenCalledWith({
+      where: { isInvalidated: false },
+      include: { answers: { select: { id: true, text: true, isCorrect: true } } },
+      orderBy: { createdAt: 'asc' },
+    })
+  })
+
+  it('returns empty array when no non-invalidated questions exist', async () => {
+    mockFindMany.mockResolvedValue([])
+    expect(await getAllStudyQuestions()).toEqual([])
+  })
+})
 
 describe('getNextQuestion', () => {
   beforeEach(() => mockFindMany.mockReset())
