@@ -13,8 +13,13 @@ export default defineConfig({
   },
   projects: [
     {
+      name: 'reset',
+      testMatch: '**/reset.setup.ts',
+    },
+    {
       name: 'setup',
       testMatch: '**/auth.setup.ts',
+      dependencies: ['reset'],
     },
     {
       name: 'chromium',
