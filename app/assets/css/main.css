@@ -1,13 +1,13 @@
 /* ── Design tokens ── */
 :root {
   /* Palette */
-  --color-bg: #ffffff;
-  --color-bg-subtle: #f8fafc;
-  --color-border: #e2e8f0;
+  --color-bg: #0f172a;
+  --color-bg-subtle: #1e293b;
+  --color-border: #334155;
 
-  --color-text: #1e293b;
-  --color-text-secondary: #64748b;
-  --color-text-muted: #94a3b8;
+  --color-text: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #64748b;
 
   --color-primary: #38bdf8;
 
@@ -19,13 +19,14 @@
   --color-sidebar-active: #38bdf8;
 
   /* Feedback */
-  --color-error-text: #b91c1c;
-  --color-error-bg: #fef2f2;
-  --color-error-border: #fecaca;
+  --color-error-text: #fca5a5;
+  --color-error-bg: #2d0a0a;
+  --color-error-border: #7f1d1d;
+  --color-error-action: #dc2626;
 
-  --color-success-text: #15803d;
-  --color-success-bg: #f0fdf4;
-  --color-success-border: #bbf7d0;
+  --color-success-text: #86efac;
+  --color-success-bg: #052e16;
+  --color-success-border: #166534;
 
   /* Spacing scale */
   --space-1: 4px;
@@ -98,6 +99,8 @@ textarea {
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);
   width: 100%;
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
 input[type="text"]:focus,

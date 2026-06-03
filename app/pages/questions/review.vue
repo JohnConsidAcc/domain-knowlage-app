@@ -221,9 +221,9 @@ async function remove(id: string) {
 }
 
 .answer-list li.correct {
-  color: #15803d;
+  color: var(--color-success-text);
   font-weight: 600;
-  background: #f0fdf4;
+  background: var(--color-success-bg);
 }
 
 .item-actions {

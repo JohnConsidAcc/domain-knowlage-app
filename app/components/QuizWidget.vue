@@ -129,9 +129,9 @@ async function handleInvalidate() {
 }
 
 .answers button.correct {
-  border-color: #16a34a;
-  background: #f0fdf4;
-  color: #15803d;
+  border-color: var(--color-success-border);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
 }
 
 .answers button.incorrect {
@@ -154,7 +154,7 @@ async function handleInvalidate() {
 
 .feedback .correct {
   font-weight: 600;
-  color: #15803d;
+  color: var(--color-success-text);
   font-size: 18px;
 }
 

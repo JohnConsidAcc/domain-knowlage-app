@@ -41,6 +41,7 @@ const mobileNavOpen = ref(false)
   padding: var(--space-8);
   overflow-y: auto;
   min-width: 0;
+  background: var(--color-bg);
 }
 
 /* Hamburger — hidden on desktop */
