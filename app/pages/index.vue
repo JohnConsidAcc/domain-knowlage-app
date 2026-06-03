@@ -83,24 +83,24 @@ onMounted(loadNextQuestion)
 
 <style scoped>
 .error-banner {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  color: #b91c1c;
-  padding: 12px 16px;
-  margin-bottom: 16px;
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-md);
+  color: var(--color-error-text);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .error-banner button {
   margin-left: auto;
-  background: #b91c1c;
+  background: var(--color-error-action);
   color: white;
   border: none;
-  border-radius: 6px;
-  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-3);
   cursor: pointer;
   font-size: 14px;
 }
