@@ -87,6 +87,7 @@ test.describe('Sidebar navigation', () => {
   test('clicking sign-out redirects to the sign-in page', async ({ page }) => {
     await page.goto('/')
     await page.locator('.sidebar-signout').click()
-    await expect(page).toHaveURL(/auth\/signin|login|keycloak|localhost:8080/, { timeout: 15_000 })
+    // After sign-out, nuxt-auth redirects to its sign-in page or Keycloak
+    await page.waitForURL(/auth\/signin|api\/auth\/signin|login|keycloak|localhost:8080/, { timeout: 15_000 })
   })
 })
