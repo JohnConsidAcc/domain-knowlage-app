@@ -1,5 +1,7 @@
 <script setup lang="ts">
 const mobileNavOpen = ref(false)
+const { data: session } = useAuth()
+const displayName = computed(() => session.value?.user?.name || session.value?.user?.email || '')
 </script>
 
 <template>
@@ -24,8 +26,13 @@ const mobileNavOpen = ref(false)
 
     <AppSidebar :mobile-open="mobileNavOpen" @close="mobileNavOpen = false" />
 
-    <div class="page-content">
-      <slot />
+    <div class="main-area">
+      <header class="app-header" role="banner">
+        <span class="user-name">{{ displayName }}</span>
+      </header>
+      <div class="page-content">
+        <slot />
+      </div>
     </div>
   </div>
 </template>
@@ -36,12 +43,35 @@ const mobileNavOpen = ref(false)
   min-height: 100vh;
 }
 
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--color-bg);
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 var(--space-6);
+  height: 48px;
+  background: var(--color-bg-subtle);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.user-name {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
 .page-content {
   flex: 1;
   padding: var(--space-8);
   overflow-y: auto;
-  min-width: 0;
-  background: var(--color-bg);
 }
 
 /* Hamburger — hidden on desktop */
@@ -83,9 +113,12 @@ const mobileNavOpen = ref(false)
     display: flex;
   }
 
+  .app-header {
+    padding-left: 56px; /* clear hamburger button */
+  }
+
   .page-content {
     padding: var(--space-4);
-    padding-top: 64px; /* clear hamburger button */
   }
 }
 </style>
