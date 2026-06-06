@@ -46,7 +46,7 @@ const { signOut } = useAuth()
       </li>
     </ul>
 
-    <button class="sidebar-signout" aria-label="Sign out" @click="signOut()">
+    <button class="sidebar-signout" aria-label="Sign out" @click="signOut({ callbackUrl: '/api/auth/signin' })">
       <span class="signout-icon" aria-hidden="true">→|</span>
       <span v-if="expanded" class="signout-label">Sign out</span>
       <span v-else class="sr-only">Sign out</span>

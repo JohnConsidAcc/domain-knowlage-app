@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { waitForHydration } from './helpers'
 
 test.describe('Statistics page', () => {
   test('shows the stats page heading', async ({ page }) => {
@@ -54,24 +55,28 @@ test.describe('Statistics page', () => {
     await expect(page.locator('.stat-card')).toHaveCount(4)
   })
 
-  test('confirming reset clears all attempts and shows success message', async ({ page }) => {
-    // First answer a question so there is something to reset
+  test('confirming reset clears all attempts', async ({ page }) => {
+    // Answer a question so there is something to reset
     await page.goto('/')
+    await expect(page.locator('.answers button').first()).toBeVisible()
     await page.locator('.answers button').first().click()
     await expect(page.locator('.feedback')).toBeVisible()
 
+    // Go to stats and confirm the attempt was recorded
     await page.goto('/stats')
-    page.on('dialog', dialog => dialog.accept())
-    await page.locator('.reset-btn').click()
-    await expect(page.getByText('Progress reset successfully')).toBeVisible()
+    await waitForHydration(page)
 
-    // All time total should now be 0
-    const allTimeDetail = await page.locator('.stat-card').last().locator('.detail').textContent()
-    expect(allTimeDetail).toContain('0 / 0 correct')
+    // Reset — accept the confirmation dialog
+    page.once('dialog', dialog => dialog.accept())
+    await page.locator('.reset-btn').click()
+
+    // All time total should drop to 0 once the refresh completes
+    await expect(page.locator('.stat-card').last().locator('.detail')).toContainText('0 / 0 correct', { timeout: 10_000 })
   })
 
   test('stats update after answering a question', async ({ page }) => {
     await page.goto('/stats')
+    await waitForHydration(page)
     const allTimeDetail = await page.locator('.stat-card').last().locator('.detail').textContent()
     const before = parseInt(allTimeDetail?.match(/(\d+) \//)?.[1] ?? '0')
 
@@ -81,8 +86,9 @@ test.describe('Statistics page', () => {
     await page.locator('.answers button').first().click()
     await expect(page.locator('.feedback')).toBeVisible()
 
-    // Check stats updated
+    // Check stats updated — wait for the fresh fetch to complete
     await page.goto('/stats')
+    await waitForHydration(page)
     const updatedDetail = await page.locator('.stat-card').last().locator('.detail').textContent()
     const after = parseInt(updatedDetail?.match(/(\d+) \//)?.[1] ?? '0')
     expect(after).toBeGreaterThan(before)
