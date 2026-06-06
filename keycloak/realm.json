@@ -1,7 +1,10 @@
 {
   "realm": "domain-app",
   "enabled": true,
-  "registrationAllowed": false,
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": true,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
   "clients": [
     {
       "clientId": "domain-knowledge-app",
