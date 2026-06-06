@@ -79,6 +79,19 @@ test.describe('Sidebar navigation', () => {
     await expect(page.locator('.sidebar')).not.toHaveClass(/collapsed/)
   })
 
+  test('header bar is visible on every page', async ({ page }) => {
+    for (const url of ['/', '/stats', '/questions/add', '/questions', '/questions/review', '/study']) {
+      await page.goto(url)
+      await expect(page.locator('.app-header')).toBeVisible()
+    }
+  })
+
+  test('header displays the signed-in user name or email', async ({ page }) => {
+    await page.goto('/')
+    const text = await page.locator('.user-name').textContent()
+    expect(text?.trim().length).toBeGreaterThan(0)
+  })
+
   test('sidebar shows a sign-out button', async ({ page }) => {
     await page.goto('/')
     await expect(page.locator('.sidebar-signout')).toBeVisible()
