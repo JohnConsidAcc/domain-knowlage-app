@@ -25,6 +25,25 @@ const emit = defineEmits<{
 const selectedAnswerId = ref<string | null>(null)
 const invalidating = ref(false)
 
+function shuffleArray<T>(arr: T[]): T[] {
+  const result = [...arr]
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[result[i], result[j]] = [result[j], result[i]]
+  }
+  return result
+}
+
+const shuffledAnswers = ref<QuizAnswer[]>(shuffleArray(props.question.answers))
+
+watch(
+  () => props.question,
+  (question) => {
+    shuffledAnswers.value = shuffleArray(question.answers)
+    selectedAnswerId.value = null
+  },
+)
+
 function selectAnswer(answerId: string) {
   /* v8 ignore next -- disabled buttons suppress click events in the test DOM */
   if (props.result !== null) return
@@ -43,7 +62,7 @@ async function handleInvalidate() {
     <p class="prompt">{{ question.prompt }}</p>
 
     <ul class="answers" role="list" aria-label="Answer options">
-      <li v-for="answer in question.answers" :key="answer.id">
+      <li v-for="answer in shuffledAnswers" :key="answer.id">
         <button
           :disabled="result !== null"
           :aria-pressed="selectedAnswerId === answer.id || undefined"
