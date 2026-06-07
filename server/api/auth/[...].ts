@@ -1,5 +1,6 @@
 import { NuxtAuthHandler } from '#auth'
 import type { AuthOptions } from 'next-auth'
+import { resolveRedirect } from '~/server/utils/auth'
 
 const authOptions: AuthOptions = {
   providers: [
@@ -23,6 +24,11 @@ const authOptions: AuthOptions = {
     },
   ],
   secret: process.env.NEXTAUTH_SECRET,
+  callbacks: {
+    async redirect({ url, baseUrl }) {
+      return resolveRedirect(url, baseUrl)
+    },
+  },
 }
 
 export default NuxtAuthHandler(authOptions, useRuntimeConfig())
