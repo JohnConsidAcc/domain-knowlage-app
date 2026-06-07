@@ -1,0 +1,26 @@
+# Build artifacts
+.nuxt
+.output
+dist
+
+# Dependencies (re-installed inside Docker)
+node_modules
+
+# Environment files (secrets must not be baked into the image)
+.env
+.env.*
+
+# Test artefacts
+coverage
+playwright-report
+test-results
+tests/e2e/.auth
+
+# Dev / tooling
+.claude
+.git
+*.md
+
+# OS
+.DS_Store
+Thumbs.db
