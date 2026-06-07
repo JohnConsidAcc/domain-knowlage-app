@@ -1,6 +1,5 @@
 import { NuxtAuthHandler } from '#auth'
 import type { AuthOptions } from 'next-auth'
-import { resolveRedirect } from '~/server/utils/auth'
 
 const authOptions: AuthOptions = {
   providers: [
