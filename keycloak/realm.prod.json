@@ -1,0 +1,25 @@
+{
+  "realm": "domain-app",
+  "enabled": true,
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": true,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "clients": [
+    {
+      "clientId": "domain-knowledge-app",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "${KC_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "${KC_APP_URL}/*"
+      ],
+      "webOrigins": [
+        "${KC_APP_URL}"
+      ]
+    }
+  ]
+}
