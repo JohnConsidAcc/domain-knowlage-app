@@ -13,3 +13,20 @@ export function resolveRedirect(url: string, baseUrl: string): string {
   if (new URL(url).origin === baseUrl) return url
   return baseUrl
 }
+
+/**
+ * Builds the Keycloak RP-initiated logout URL.
+ *
+ * Redirecting the user here ends the Keycloak session so they are not
+ * silently re-authenticated on the next sign-in attempt.
+ */
+export function buildKeycloakLogoutUrl(
+  issuer: string,
+  clientId: string,
+  postLogoutRedirectUri: string,
+): string {
+  const url = new URL(`${issuer}/protocol/openid-connect/logout`)
+  url.searchParams.set('post_logout_redirect_uri', postLogoutRedirectUri)
+  url.searchParams.set('client_id', clientId)
+  return url.toString()
+}
