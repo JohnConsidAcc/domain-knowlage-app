@@ -18,6 +18,14 @@ const links = [
 ]
 
 const { signOut } = useAuth()
+
+async function handleSignOut() {
+  // 1. Clear the local NextAuth session cookie without redirecting.
+  await signOut({ redirect: false })
+  // 2. Redirect to Keycloak's end-session endpoint to clear the SSO session.
+  //    Without this step, Keycloak silently re-authenticates on the next login.
+  window.location.href = '/api/auth/keycloak-logout'
+}
 </script>
 
 <template>
@@ -46,7 +54,7 @@ const { signOut } = useAuth()
       </li>
     </ul>
 
-    <button class="sidebar-signout" aria-label="Sign out" @click="signOut({ callbackUrl: '/api/auth/signin' })">
+    <button class="sidebar-signout" aria-label="Sign out" @click="handleSignOut">
       <span class="signout-icon" aria-hidden="true">→|</span>
       <span v-if="expanded" class="signout-label">Sign out</span>
       <span v-else class="sr-only">Sign out</span>
