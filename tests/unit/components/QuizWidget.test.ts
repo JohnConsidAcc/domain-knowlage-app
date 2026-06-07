@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import QuizWidget from '~/components/QuizWidget.vue'
 
@@ -12,6 +12,16 @@ const question = {
 }
 
 describe('QuizWidget', () => {
+  // Mock Math.random to return 0.9 so Fisher-Yates never swaps in a 2-element
+  // array (j always equals i). This keeps the rendered order deterministic for
+  // tests that care about button index.
+  beforeEach(() => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.9)
+  })
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('renders the question prompt', async () => {
     const wrapper = await mountSuspended(QuizWidget, { props: { question, result: null, correctAnswerId: null } })
     expect(wrapper.text()).toContain('What is 2 + 2?')
@@ -23,6 +33,27 @@ describe('QuizWidget', () => {
     expect(buttons).toHaveLength(2)
     expect(buttons[0].text()).toBe('3')
     expect(buttons[1].text()).toBe('4')
+  })
+
+  it('shuffles answers in a different order when Math.random returns 0', async () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const wrapper = await mountSuspended(QuizWidget, { props: { question, result: null, correctAnswerId: null } })
+    const texts = wrapper.findAll('.answers button').map(b => b.text())
+    // All answers are still rendered
+    expect(texts).toContain('3')
+    expect(texts).toContain('4')
+    // With random=0 the array is reversed
+    expect(texts[0]).toBe('4')
+    expect(texts[1]).toBe('3')
+  })
+
+  it('re-shuffles when the question changes', async () => {
+    const question2 = { id: 'q2', prompt: 'Colour of sky?', answers: [{ id: 'b1', text: 'Red' }, { id: 'b2', text: 'Blue' }] }
+    const wrapper = await mountSuspended(QuizWidget, { props: { question, result: null, correctAnswerId: null } })
+    await wrapper.setProps({ question: question2 })
+    const texts = wrapper.findAll('.answers button').map(b => b.text())
+    expect(texts).toContain('Red')
+    expect(texts).toContain('Blue')
   })
 
   it('emits answered with questionId and answerId on click', async () => {
@@ -80,11 +111,7 @@ describe('QuizWidget', () => {
     const wrapper = await mountSuspended(QuizWidget, {
       props: { question, result: false, correctAnswerId: 'a2' },
     })
-    // Simulate a1 having been selected (selectedAnswerId internal state)
     await wrapper.findAll('.answers button')[0].trigger('click')
-    // After answering, result would be set — but we test the class by using result: false
-    // The incorrect class applies when result===false AND answerId===selectedAnswerId AND !== correctAnswerId
-    // We need to verify via the prop-driven class binding by checking the button classes
     const buttons = wrapper.findAll('.answers button')
     expect(buttons[1].classes()).toContain('correct')
   })
