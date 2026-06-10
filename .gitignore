@@ -23,5 +23,8 @@ tests/e2e/.auth/user.json
 .DS_Store
 Thumbs.db
 
+# CloudFormation — real parameters file contains secrets, never commit it
+cloudformation/parameters.json
+
 # Claude Code
 .claude/
