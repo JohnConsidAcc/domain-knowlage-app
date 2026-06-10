@@ -2,17 +2,82 @@
 
 Please follow the rules and guidelines in Claude.md.
 
-- The name of the current user should be displayed in the upper right corner.
-- I should be able to sign up as a new user.
-- I should be able to launch a production version of the project on an AWS EC2 instance running Docker.
-  - Target: a single EC2 instance (Ubuntu 22.04 LTS, t3.small or larger) with Docker and Docker Compose v2 installed.
-  - All services (Nuxt app, Postgres, Keycloak) run as containers defined in docker-compose.yml.
-  - The Nuxt app is built into a Docker image using a multi-stage Dockerfile (Node build stage → lean Node runtime stage).
-  - Keycloak must run in production mode (`start` command, not `start-dev`) backed by its own Postgres database so realm data persists across restarts.
-  - A separate production Keycloak realm config (no test user, registration open) is used; redirect URIs point to the EC2 public IP or domain.
-  - Prisma migrations (`prisma migrate deploy`) run automatically on app container startup before the server starts.
-  - All production secrets and URLs are specified in a `.env.prod` file (gitignored; a `.env.prod.example` is committed instead). This file is used with `docker compose --env-file .env.prod up -d`.
-  - Internal service communication uses Docker Compose service names (e.g. `DATABASE_URL` uses `db:5432`, Keycloak uses its container name) — not `localhost`.
-  - The production deployment must not contain the test user (`test@example.com`) or the E2E seed questions.
-  - The `POST /api/test/reset` endpoint is already blocked in production via the `NODE_ENV` guard.
-  - EC2 security group: open port 3000 (Nuxt) and 8080 (Keycloak) to the world, or preferably route both through a reverse proxy on port 80/443.
+## Completed
+
+- ✅ The name of the current user is displayed in the upper right corner.
+- ✅ Users can sign up as new accounts (open registration via Keycloak).
+- ✅ Production deployment on AWS EC2 with Docker Compose.
+  - Multi-stage Dockerfile, docker-entrypoint.sh (auto-runs prisma migrate deploy).
+  - docker-compose.yml with app, db, keycloak-db and keycloak services.
+  - Keycloak runs in production mode (start) backed by its own Postgres database.
+  - keycloak/realm.prod.json — no test user, open registration, dynamic redirect URIs.
+  - .env.prod.example documents all required secrets; .env.prod is gitignored.
+  - npm scripts: docker:up, docker:prod:up, docker:down, docker:reset, docker:logs.
+
+---
+
+## Pending
+
+### AWS CloudFormation deployment
+
+I should be able to provision the entire production environment on AWS using a
+single CloudFormation template — no manual console clicking required.
+
+#### Deliverables
+
+1. **`cloudformation/template.yml`** — CloudFormation template that creates:
+   - EC2 instance (Ubuntu 22.04 LTS, `t3.small` default, configurable via parameter).
+   - Security Group with ingress on port 22 (SSH), 80 (HTTP), 443 (HTTPS), 3000 (Nuxt) and 8080 (Keycloak). 22 should be restricted to a trusted CIDR parameter.
+   - Elastic IP so the public address stays stable across stop/start.
+   - IAM instance profile with CloudWatch Logs permissions (so docker logs can be shipped).
+   - User Data script that:
+     - Installs Docker Engine and Docker Compose v2 on first boot.
+     - Clones the repository (or pulls a specified branch).
+     - Writes `.env.prod` from CloudFormation parameters.
+     - Runs `docker compose --env-file .env.prod up -d --build`.
+
+2. **`cloudformation/parameters.example.json`** — example parameters file showing every
+   parameter name and a placeholder value, committed to git.
+
+3. **`cloudformation/deploy.sh`** — thin wrapper around `aws cloudformation deploy`
+   that reads a local `cloudformation/parameters.json` (gitignored) and deploys
+   or updates the stack.
+
+4. **`.gitignore`** — add `cloudformation/parameters.json` (contains real secrets).
+
+#### CloudFormation parameters
+
+| Parameter | Description |
+|---|---|
+| `InstanceType` | EC2 instance type (default: `t3.small`) |
+| `KeyPairName` | Existing EC2 key pair for SSH access |
+| `SshCidr` | CIDR range allowed to SSH (e.g. your office IP) |
+| `GitRepo` | Repository URL to clone on the instance |
+| `GitBranch` | Branch to check out (default: `main`) |
+| `AppUrl` | Public URL of the app, e.g. `http://<elastic-ip>:3000` |
+| `KeycloakUrl` | Public URL of Keycloak, e.g. `http://<elastic-ip>:8080` |
+| `KeycloakAdminPassword` | Admin password for the Keycloak console |
+| `DbPassword` | Password for the app Postgres database |
+| `KcDbPassword` | Password for the Keycloak Postgres database |
+| `NextAuthSecret` | Random secret for NextAuth (generate: `openssl rand -base64 32`) |
+| `OidcClientSecret` | OIDC client secret shared between Keycloak and the app |
+
+#### CloudFormation outputs
+
+| Output | Value |
+|---|---|
+| `AppUrl` | `http://<ElasticIP>:3000` |
+| `KeycloakUrl` | `http://<ElasticIP>:8080` |
+| `SshCommand` | `ssh ubuntu@<ElasticIP>` |
+
+#### Constraints and notes
+
+- Secrets are passed as CloudFormation `NoEcho` parameters so they are not
+  visible in the console events or outputs.
+- The Elastic IP is allocated and associated with the instance; the same IP
+  survives a stack update that replaces the instance.
+- The User Data script should be idempotent — re-running it (e.g. after an
+  instance reboot) must not break the running containers.
+- The deploy script must work with the AWS CLI v2 and assume the caller has
+  appropriate IAM permissions (`ec2:*`, `cloudformation:*`, `iam:PassRole`).
+- The stack name is configurable in `deploy.sh` (default: `domain-knowledge-app`).
