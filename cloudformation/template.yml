@@ -1,0 +1,282 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Domain Knowledge App — single EC2 instance running all services
+  (Nuxt, Postgres, Keycloak) via Docker Compose.
+
+# ---------------------------------------------------------------------------
+# Parameters
+# ---------------------------------------------------------------------------
+Parameters:
+
+  InstanceType:
+    Type: String
+    Default: t3.small
+    Description: >
+      EC2 instance type. NOTE: building the Nuxt Docker image requires ~1.5 GB
+      RAM. If the build fails with an out-of-memory error, use t3.medium (4 GB).
+    AllowedValues:
+      - t3.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 key pair for SSH access.
+
+  SshCidr:
+    Type: String
+    Description: >
+      CIDR range allowed to SSH into the instance (e.g. your office IP:
+      203.0.113.42/32). Use 0.0.0.0/0 only for testing.
+    AllowedPattern: '^(\d{1,3}\.){3}\d{1,3}/\d{1,2}$'
+    ConstraintDescription: Must be a valid IPv4 CIDR block.
+
+  GitRepo:
+    Type: String
+    Description: Public HTTPS URL of the Git repository to clone on the instance.
+    Default: https://github.com/JohnConsidAcc/domain-knowlage-app.git
+
+  GitBranch:
+    Type: String
+    Default: main
+    Description: Branch to check out after cloning.
+
+  AppUrl:
+    Type: String
+    Description: >
+      Public URL of the Nuxt app, e.g. http://1.2.3.4:3000.
+      Use the Elastic IP that will be allocated by this stack — you can find it
+      in the stack Outputs after creation. Leave a placeholder for now and
+      update the stack once the IP is known, or use a domain name.
+
+  KeycloakUrl:
+    Type: String
+    Description: >
+      Public URL of Keycloak, e.g. http://1.2.3.4:8080.
+      Same guidance as AppUrl — use the allocated Elastic IP.
+
+  KeycloakAdminPassword:
+    Type: String
+    NoEcho: true
+    MinLength: 8
+    Description: Password for the Keycloak admin console (admin user).
+
+  DbPassword:
+    Type: String
+    NoEcho: true
+    MinLength: 8
+    Description: Password for the app Postgres database (domainapp user).
+
+  KcDbPassword:
+    Type: String
+    NoEcho: true
+    MinLength: 8
+    Description: Password for the Keycloak Postgres database (keycloak user).
+
+  NextAuthSecret:
+    Type: String
+    NoEcho: true
+    MinLength: 32
+    Description: >
+      Random secret for NextAuth session encryption.
+      Generate with: openssl rand -base64 32
+
+  OidcClientSecret:
+    Type: String
+    NoEcho: true
+    MinLength: 8
+    Description: >
+      OIDC client secret shared between Keycloak and the Nuxt app.
+      Generate with: openssl rand -base64 32
+
+# ---------------------------------------------------------------------------
+# Resources
+# ---------------------------------------------------------------------------
+Resources:
+
+  # ── Security Group ──────────────────────────────────────────────────────────
+  AppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Domain Knowledge App — allow HTTP, app ports and restricted SSH
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref SshCidr
+          Description: SSH (restricted to trusted CIDR)
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: HTTP
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: HTTPS
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          CidrIp: 0.0.0.0/0
+          Description: Nuxt app
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+          Description: Keycloak
+      Tags:
+        - Key: Name
+          Value: domain-knowledge-app-sg
+
+  # ── Elastic IP ──────────────────────────────────────────────────────────────
+  ElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: domain-knowledge-app-eip
+
+  EIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      InstanceId: !Ref AppInstance
+      EIP: !Ref ElasticIP
+
+  # ── IAM Role & Instance Profile ─────────────────────────────────────────────
+  AppInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub domain-knowledge-app-role-${AWS::StackName}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+      Tags:
+        - Key: Name
+          Value: domain-knowledge-app-role
+
+  AppInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref AppInstanceRole
+
+  # ── EC2 Instance ─────────────────────────────────────────────────────────────
+  AppInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      # Ubuntu 22.04 LTS — resolved dynamically via Canonical's SSM path so
+      # the latest patched AMI is always used without hardcoding region IDs.
+      # Dynamic references are processed before intrinsic functions; no !Sub needed.
+      ImageId: '{{resolve:ssm:/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id}}'
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyPairName
+      IamInstanceProfile: !Ref AppInstanceProfile
+      SecurityGroups:
+        - !Ref AppSecurityGroup
+      # 30 GB root volume — the default 8 GB is too small for Docker images
+      # and the two Postgres data volumes.
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 30
+            VolumeType: gp3
+            DeleteOnTermination: true
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash
+            set -euo pipefail
+            # All output is written to /var/log/user-data.log for debugging.
+            exec > /var/log/user-data.log 2>&1
+
+            echo "=== [1/4] Installing Docker Engine and Compose v2 ==="
+            apt-get update -y
+            apt-get install -y ca-certificates curl gnupg lsb-release git
+
+            install -m 0755 -d /etc/apt/keyrings
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+              | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+            chmod a+r /etc/apt/keyrings/docker.gpg
+
+            echo \
+              "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+              https://download.docker.com/linux/ubuntu \
+              $(lsb_release -cs) stable" \
+              > /etc/apt/sources.list.d/docker.list
+
+            apt-get update -y
+            apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+            usermod -aG docker ubuntu
+            systemctl enable --now docker
+
+            echo "=== [2/4] Cloning repository ==="
+            git clone ${GitRepo} /app
+            cd /app
+            git checkout ${GitBranch}
+
+            echo "=== [3/4] Writing .env.prod ==="
+            # CloudFormation !Sub has already replaced ${Param} tokens above
+            # with their real values before this script runs on the instance.
+            cat > /app/.env.prod << ENVEOF
+            APP_URL=${AppUrl}
+            POSTGRES_USER=domainapp
+            POSTGRES_PASSWORD=${DbPassword}
+            POSTGRES_DB=domain_knowledge
+            KC_DB_USERNAME=keycloak
+            KC_DB_PASSWORD=${KcDbPassword}
+            KC_DB_DATABASE=keycloak
+            KEYCLOAK_ADMIN=admin
+            KEYCLOAK_ADMIN_PASSWORD=${KeycloakAdminPassword}
+            KC_HOSTNAME_URL=${KeycloakUrl}
+            KC_APP_URL=${AppUrl}
+            KC_CLIENT_SECRET=${OidcClientSecret}
+            KC_REALM_FILE=./keycloak/realm.prod.json
+            NEXTAUTH_SECRET=${NextAuthSecret}
+            NEXTAUTH_URL=${AppUrl}
+            OIDC_CLIENT_SECRET=${OidcClientSecret}
+            OIDC_ISSUER=${KeycloakUrl}/realms/domain-app
+            OIDC_CLIENT_ID=domain-knowledge-app
+            ENVEOF
+
+            echo "=== [4/4] Starting services ==="
+            # The app container's docker-entrypoint.sh automatically runs
+            # "prisma migrate deploy" before the Nuxt server starts.
+            cd /app
+            docker compose --env-file .env.prod up -d --build
+
+            echo "=== Startup complete ==="
+
+      Tags:
+        - Key: Name
+          Value: domain-knowledge-app
+
+# ---------------------------------------------------------------------------
+# Outputs
+# ---------------------------------------------------------------------------
+Outputs:
+
+  AppUrl:
+    Description: Public URL of the Nuxt application
+    Value: !Sub 'http://${ElasticIP}:3000'
+
+  KeycloakUrl:
+    Description: Public URL of the Keycloak admin console
+    Value: !Sub 'http://${ElasticIP}:8080'
+
+  SshCommand:
+    Description: SSH command to connect to the instance
+    Value: !Sub 'ssh ubuntu@${ElasticIP}'
+
+  UserDataLog:
+    Description: Path to the startup log on the instance (tail it after SSH)
+    Value: /var/log/user-data.log

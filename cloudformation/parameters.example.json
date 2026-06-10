@@ -1,0 +1,53 @@
+[
+  {
+    "ParameterKey": "InstanceType",
+    "ParameterValue": "t3.small",
+    "Description": "t3.small (2 GB) may OOM during Docker build. Use t3.medium (4 GB) if the build fails."
+  },
+  {
+    "ParameterKey": "KeyPairName",
+    "ParameterValue": "my-ec2-keypair"
+  },
+  {
+    "ParameterKey": "SshCidr",
+    "ParameterValue": "203.0.113.0/32"
+  },
+  {
+    "ParameterKey": "GitRepo",
+    "ParameterValue": "https://github.com/your-org/domain-knowlage-app.git"
+  },
+  {
+    "ParameterKey": "GitBranch",
+    "ParameterValue": "main"
+  },
+  {
+    "ParameterKey": "AppUrl",
+    "ParameterValue": "http://ELASTIC_IP:3000",
+    "Description": "Replace ELASTIC_IP with the Elastic IP shown in the stack Outputs after first deploy."
+  },
+  {
+    "ParameterKey": "KeycloakUrl",
+    "ParameterValue": "http://ELASTIC_IP:8080",
+    "Description": "Replace ELASTIC_IP with the Elastic IP shown in the stack Outputs after first deploy."
+  },
+  {
+    "ParameterKey": "KeycloakAdminPassword",
+    "ParameterValue": "CHANGE_ME"
+  },
+  {
+    "ParameterKey": "DbPassword",
+    "ParameterValue": "CHANGE_ME"
+  },
+  {
+    "ParameterKey": "KcDbPassword",
+    "ParameterValue": "CHANGE_ME"
+  },
+  {
+    "ParameterKey": "NextAuthSecret",
+    "ParameterValue": "CHANGE_ME — generate with: openssl rand -base64 32"
+  },
+  {
+    "ParameterKey": "OidcClientSecret",
+    "ParameterValue": "CHANGE_ME — generate with: openssl rand -base64 32"
+  }
+]
