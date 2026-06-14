@@ -14,12 +14,8 @@
       "secret": "${env.KC_CLIENT_SECRET}",
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
-      "redirectUris": [
-        "${env.KC_APP_URL}/*"
-      ],
-      "webOrigins": [
-        "${env.KC_APP_URL}"
-      ]
+      "redirectUris": ["*"],
+      "webOrigins": ["+"]
     }
   ]
 }
