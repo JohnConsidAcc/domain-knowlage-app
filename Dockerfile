@@ -18,11 +18,10 @@ COPY --from=build /app/.output ./.output
 # Copy Prisma schema and migration files (needed for migrate deploy)
 COPY --from=build /app/prisma ./prisma
 
-# Copy Prisma client and CLI binaries needed at runtime
-COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=build /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=build /app/node_modules/prisma ./node_modules/prisma
-COPY --from=build /app/node_modules/.bin/prisma* ./node_modules/.bin/
+# Copy all of node_modules so the Prisma CLI has every file it needs at runtime
+# (WASM binaries, engine binaries, etc.) without having to cherry-pick paths
+# that can change between Prisma versions.
+COPY --from=build /app/node_modules ./node_modules
 
 COPY docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
