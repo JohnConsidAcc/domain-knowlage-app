@@ -11,14 +11,14 @@
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,
-      "secret": "${KC_CLIENT_SECRET}",
+      "secret": "${env.KC_CLIENT_SECRET}",
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "redirectUris": [
-        "${KC_APP_URL}/*"
+        "${env.KC_APP_URL}/*"
       ],
       "webOrigins": [
-        "${KC_APP_URL}"
+        "${env.KC_APP_URL}"
       ]
     }
   ]
