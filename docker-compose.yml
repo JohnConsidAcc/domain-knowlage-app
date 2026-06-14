@@ -82,13 +82,14 @@ services:
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
       AUTH_ORIGIN: ${APP_URL:-http://localhost:3000}/api/auth
       OIDC_ISSUER: ${OIDC_ISSUER:-http://keycloak:8080/realms/domain-app}
+      # Docker-internal Keycloak URL used for server-side OIDC calls (discovery,
+      # token exchange, userinfo). Keeps all server→Keycloak traffic on plain HTTP
+      # so Node.js never needs to verify the self-signed TLS cert — Node 18+
+      # fetch (undici) ignores NODE_EXTRA_CA_CERTS, making that approach useless.
+      OIDC_INTERNAL_ISSUER: http://keycloak:8080/realms/domain-app
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-domain-knowledge-app}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-dev-client-secret}
       NODE_ENV: production
-      # Trust the self-signed Nginx cert so Node.js can verify HTTPS calls to Keycloak.
-      NODE_EXTRA_CA_CERTS: /etc/ssl/extra/cert.pem
-    volumes:
-      - ./nginx/ssl/cert.pem:/etc/ssl/extra/cert.pem:ro
     # Port 3000 is not published — Nginx is the only entry point for external traffic.
 
   # ── Nginx reverse proxy (TLS termination) ─────────────────────────────────────
