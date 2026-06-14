@@ -21,8 +21,8 @@
     "docker:up": "docker compose up -d db keycloak-db keycloak",
     "docker:down": "docker compose down",
     "docker:reset": "docker compose down -v",
-    "docker:prod:up": "docker compose --env-file .env.prod up -d --build",
-    "docker:prod:down": "docker compose --env-file .env.prod down",
+    "docker:prod:up": "docker compose -p dka-prod --env-file .env.prod up -d --build",
+    "docker:prod:down": "docker compose -p dka-prod --env-file .env.prod down",
     "docker:logs": "docker compose logs -f"
   },
   "prisma": {
