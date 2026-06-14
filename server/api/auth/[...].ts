@@ -1,15 +1,18 @@
 import { NuxtAuthHandler } from '#auth'
 import type { AuthOptions } from 'next-auth'
 
-// Server-side OIDC calls (discovery, token exchange, userinfo) use the
-// Docker-internal URL so Node.js never needs to verify the self-signed TLS
-// cert (Node 18+ fetch / undici ignores NODE_EXTRA_CA_CERTS).
+// All endpoints are set explicitly — no wellKnown/discovery.
 //
-// The authorization URL (browser redirect to Keycloak login) is set
-// explicitly from OIDC_ISSUER so the browser always receives the correct
-// external HTTPS URL — the discovery document returns keycloak:8080 when
-// fetched internally because Keycloak v2 hostname config only applies to
-// frontend (Nginx-proxied) requests.
+// When wellKnown is used, next-auth feeds the discovery document through
+// openid-client, which overrides the explicit authorization.url with the
+// authorization_endpoint from the document. Keycloak's discovery document
+// returns the Docker-internal hostname (keycloak:8080) for all requests
+// that bypass Nginx, so the browser would be redirected to an unreachable
+// internal URL regardless of what OIDC_ISSUER is set to.
+//
+// Without wellKnown, next-auth uses our explicit URLs directly:
+//   - authorization → external HTTPS URL (browser redirect)
+//   - token / userinfo → internal Docker URL (server-side, no TLS needed)
 const internalIssuer =
   process.env.OIDC_INTERNAL_ISSUER ?? process.env.OIDC_ISSUER
 const externalIssuer = process.env.OIDC_ISSUER
@@ -20,7 +23,6 @@ const authOptions: AuthOptions = {
       id: 'oidc',
       name: 'OIDC',
       type: 'oauth',
-      wellKnown: `${internalIssuer}/.well-known/openid-configuration`,
       clientId: process.env.OIDC_CLIENT_ID,
       clientSecret: process.env.OIDC_CLIENT_SECRET,
       authorization: {
