@@ -8,6 +8,7 @@ export default defineNuxtConfig({
     provider: {
       type: 'authjs',
     },
+    baseURL: '/api/auth',
     globalAppMiddleware: true,
   },
 })
