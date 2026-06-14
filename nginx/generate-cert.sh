@@ -30,12 +30,25 @@ else
     echo "         Usage: bash nginx/generate-cert.sh <server-ip>"
 fi
 
-# MSYS_NO_PATHCONV=1 prevents Git Bash on Windows from converting the
-# -subj value (which starts with /) into a Windows filesystem path.
+# On Windows/Git Bash, openssl is a native Windows binary that cannot open
+# MSYS POSIX paths (/c/Users/...). cygpath -m converts them to mixed Windows
+# paths (C:/Users/...) that Windows binaries understand.
+# On Linux/macOS cygpath is absent so the paths are used as-is.
+if command -v cygpath &>/dev/null; then
+    KEYOUT="$(cygpath -m "$SSL_DIR/key.pem")"
+    CERTOUT="$(cygpath -m "$SSL_DIR/cert.pem")"
+else
+    KEYOUT="$SSL_DIR/key.pem"
+    CERTOUT="$SSL_DIR/cert.pem"
+fi
+
+# MSYS_NO_PATHCONV=1 prevents Git Bash from converting -subj "/CN=..."
+# into a Windows filesystem path (C:/Program Files/Git/CN=...).
+# The output paths are already in Windows format via cygpath above.
 MSYS_NO_PATHCONV=1 openssl req -x509 \
     -newkey rsa:4096 \
-    -keyout "$SSL_DIR/key.pem" \
-    -out    "$SSL_DIR/cert.pem" \
+    -keyout "$KEYOUT" \
+    -out    "$CERTOUT" \
     -days 3650 \
     -nodes \
     -subj "/CN=domain-knowledge-app" \
