@@ -82,6 +82,10 @@ services:
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-domain-knowledge-app}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-dev-client-secret}
       NODE_ENV: production
+      # Trust the self-signed Nginx cert so Node.js can verify HTTPS calls to Keycloak.
+      NODE_EXTRA_CA_CERTS: /etc/ssl/extra/cert.pem
+    volumes:
+      - ./nginx/ssl/cert.pem:/etc/ssl/extra/cert.pem:ro
     # Port 3000 is not published — Nginx is the only entry point for external traffic.
 
   # ── Nginx reverse proxy (TLS termination) ─────────────────────────────────────
@@ -96,9 +100,12 @@ services:
     depends_on:
       app:
         condition: service_started
+      keycloak:
+        condition: service_started
     ports:
       - "80:80"
       - "443:443"
+      - "8443:8443"
 
 volumes:
   postgres_data:
