@@ -41,7 +41,7 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     restart: unless-stopped
-    command: start --import-realm --http-enabled=true --hostname-strict=false
+    command: start --import-realm --http-enabled=true --hostname-strict=false --http-relative-path=/auth
     depends_on:
       keycloak-db:
         condition: service_healthy
@@ -87,12 +87,12 @@ services:
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret-change-me-in-production}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
       AUTH_ORIGIN: ${APP_URL:-http://localhost:3000}/api/auth
-      OIDC_ISSUER: ${OIDC_ISSUER:-http://keycloak:8080/realms/domain-app}
+      OIDC_ISSUER: ${OIDC_ISSUER:-http://keycloak:8080/auth/realms/domain-app}
       # Docker-internal Keycloak URL used for server-side OIDC calls (discovery,
       # token exchange, userinfo). Keeps all server→Keycloak traffic on plain HTTP
       # so Node.js never needs to verify the self-signed TLS cert — Node 18+
       # fetch (undici) ignores NODE_EXTRA_CA_CERTS, making that approach useless.
-      OIDC_INTERNAL_ISSUER: http://keycloak:8080/realms/domain-app
+      OIDC_INTERNAL_ISSUER: http://keycloak:8080/auth/realms/domain-app
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-domain-knowledge-app}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-dev-client-secret}
       NODE_ENV: production
@@ -102,8 +102,8 @@ services:
   # Built from nginx/Dockerfile which bakes in the pre-generated certificate.
   # Run "bash nginx/generate-cert.sh <server-ip>" before building this image.
   # HTTP (port 80) is redirected to HTTPS (port 443).
-  # Keycloak (port 8080) is intentionally kept on plain HTTP to avoid Node.js
-  # TLS-trust issues with self-signed certs in server-side OIDC calls.
+  # Both the app (/) and Keycloak (/auth/) are served from port 443.
+  # All internal traffic stays on plain HTTP — Nginx is the only TLS endpoint.
   nginx:
     build: ./nginx
     restart: unless-stopped
@@ -115,7 +115,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8443:8443"
 
 volumes:
   postgres_data:
