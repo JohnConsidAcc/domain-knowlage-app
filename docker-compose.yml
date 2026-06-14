@@ -50,10 +50,8 @@ services:
       KC_DB_URL: jdbc:postgresql://keycloak-db:5432/${KC_DB_DATABASE:-keycloak}
       KC_DB_USERNAME: ${KC_DB_USERNAME:-keycloak}
       KC_DB_PASSWORD: ${KC_DB_PASSWORD:-keycloak}
-      # Used for redirect URI / client secret substitution inside realm JSON (Keycloak 22+)
-      KC_APP_URL: ${APP_URL:-http://localhost:3000}
       KC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-dev-client-secret}
-      # Production: set to the external URL of the Keycloak instance
+      # External URL Keycloak uses to build HTTPS links in tokens and discovery.
       KC_HOSTNAME_URL: ${KC_HOSTNAME_URL:-}
       # Trust X-Forwarded-Proto / X-Forwarded-Host from the Nginx proxy so
       # Keycloak builds HTTPS URLs with the correct port (8443) in responses.
