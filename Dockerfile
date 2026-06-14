@@ -5,7 +5,12 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
+# Copy the full source (including prisma/schema.prisma) before generating
+# the Prisma client. npm ci above runs @prisma/client's postinstall, but the
+# schema doesn't exist yet at that point, so only stub files are produced.
+# Running generate here creates the real client with the engine binary.
 COPY . .
+RUN npx prisma generate
 RUN npm run build
 
 # Stage 2: Runtime
@@ -23,8 +28,8 @@ COPY --from=build /app/prisma ./prisma
 # that can change between Prisma versions.
 COPY --from=build /app/node_modules ./node_modules
 
-# Nitro bundles the Prisma client JS into .output but skips the native query
-# engine binary. Overwrite with the fully generated client from the build stage.
+# Nitro bundles the Prisma client JS into .output but skips native binary files.
+# Overwrite with the properly generated client (includes the query engine binary).
 COPY --from=build /app/node_modules/.prisma/client ./.output/server/node_modules/.prisma/client
 
 COPY docker-entrypoint.sh ./
