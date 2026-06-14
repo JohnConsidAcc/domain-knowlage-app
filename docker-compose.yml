@@ -55,6 +55,9 @@ services:
       KC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-dev-client-secret}
       # Production: set to the external URL of the Keycloak instance
       KC_HOSTNAME_URL: ${KC_HOSTNAME_URL:-}
+      # Trust X-Forwarded-Proto / X-Forwarded-Host from the Nginx proxy so
+      # Keycloak builds HTTPS URLs with the correct port (8443) in responses.
+      KC_PROXY_HEADERS: xforwarded
     ports:
       - "8080:8080"
     volumes:
