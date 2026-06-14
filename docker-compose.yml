@@ -82,9 +82,33 @@ services:
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-domain-knowledge-app}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-dev-client-secret}
       NODE_ENV: production
+    # Port 3000 is not published — Nginx is the only entry point for external traffic.
+
+  # ── Nginx reverse proxy (TLS termination) ─────────────────────────────────────
+  # Handles HTTPS with a self-signed certificate generated on first start.
+  # HTTP (port 80) is redirected to HTTPS (port 443).
+  # Keycloak (port 8080) is intentionally kept on plain HTTP to avoid Node.js
+  # TLS-trust issues with self-signed certs in server-side OIDC calls.
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_started
     ports:
-      - "3000:3000"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/entrypoint.sh:/entrypoint.sh:ro
+      - nginx_ssl:/etc/nginx/ssl
+    environment:
+      # Set to the server's public IP so the certificate includes it as a
+      # Subject Alternative Name (required for browsers to accept the cert).
+      SERVER_IP: ${SERVER_IP:-}
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
 
 volumes:
   postgres_data:
   keycloak_data:
+  nginx_ssl:
