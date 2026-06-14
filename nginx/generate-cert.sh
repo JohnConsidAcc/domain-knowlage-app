@@ -30,7 +30,9 @@ else
     echo "         Usage: bash nginx/generate-cert.sh <server-ip>"
 fi
 
-openssl req -x509 \
+# MSYS_NO_PATHCONV=1 prevents Git Bash on Windows from converting the
+# -subj value (which starts with /) into a Windows filesystem path.
+MSYS_NO_PATHCONV=1 openssl req -x509 \
     -newkey rsa:4096 \
     -keyout "$SSL_DIR/key.pem" \
     -out    "$SSL_DIR/cert.pem" \
