@@ -36,6 +36,8 @@ services:
   # ── Keycloak ──────────────────────────────────────────────────────────────────
   # Runs in production mode (start) with HTTP enabled so it works without TLS
   # both locally and on EC2. Realm is imported from KC_REALM_FILE on first start.
+  # The health check uses bash /dev/tcp (no curl/wget needed in the UBI9-minimal
+  # image) to wait until port 8080 is accepting connections before the app starts.
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     restart: unless-stopped
@@ -43,6 +45,12 @@ services:
     depends_on:
       keycloak-db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
@@ -73,7 +81,7 @@ services:
       db:
         condition: service_healthy
       keycloak:
-        condition: service_started
+        condition: service_healthy
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-domainapp}:${POSTGRES_PASSWORD:-domainapp}@db:5432/${POSTGRES_DB:-domain_knowledge}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret-change-me-in-production}
