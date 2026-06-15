@@ -39,7 +39,7 @@ services:
   # The health check uses bash /dev/tcp (no curl/wget needed in the UBI9-minimal
   # image) to wait until port 8080 is accepting connections before the app starts.
   keycloak:
-    image: quay.io/keycloak/keycloak:latest
+    build: ./keycloak
     restart: unless-stopped
     command: start --import-realm --http-enabled=true --hostname-strict=false --http-relative-path=/auth
     depends_on:
@@ -67,9 +67,10 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      # Mount only the selected realm file. Override KC_REALM_FILE in .env.prod
-      # to use the production realm (keycloak/realm.prod.json).
-      - ${KC_REALM_FILE:-./keycloak/realm.json}:/opt/keycloak/data/import/realm.json
+      # Mount the realm file as a template. The entrypoint substitutes
+      # ${env.KC_CLIENT_SECRET} before kc.sh runs, writing the result to
+      # /opt/keycloak/data/import/realm.json where --import-realm expects it.
+      - ${KC_REALM_FILE:-./keycloak/realm.json}:/opt/keycloak/data/realm-template.json
 
   # ── Nuxt application ──────────────────────────────────────────────────────────
   # Built from the Dockerfile in the project root. For local development, run
