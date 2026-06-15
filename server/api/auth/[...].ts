@@ -24,6 +24,14 @@ import type { AuthOptions } from 'next-auth'
 //   - jwks_endpoint  → internal Docker HTTP (id_token signature validation)
 //   - issuer         → external HTTPS URL (must match 'iss' in Keycloak tokens,
 //                      which Keycloak sets from KC_HOSTNAME_URL)
+//
+// client_secret_post is used instead of the default client_secret_basic.
+// openid-client percent-encodes credentials before base64 for Basic auth
+// (RFC 6749 §2.3.1). Keycloak does not URL-decode Basic auth credentials,
+// so secrets containing /, +, = (base64 output) fail with
+// "invalid_client_credentials". client_secret_post sends credentials in the
+// POST body as application/x-www-form-urlencoded, which Keycloak correctly
+// decodes, making any printable secret work.
 const internalIssuer =
   process.env.OIDC_INTERNAL_ISSUER ?? process.env.OIDC_ISSUER
 const externalIssuer = process.env.OIDC_ISSUER
@@ -44,6 +52,7 @@ const authOptions: AuthOptions = {
       token: { url: `${internalIssuer}/protocol/openid-connect/token` },
       userinfo: { url: `${internalIssuer}/protocol/openid-connect/userinfo` },
       jwks_endpoint: `${internalIssuer}/protocol/openid-connect/certs`,
+      client: { token_endpoint_auth_method: 'client_secret_post' },
       profile(profile) {
         return {
           id: profile.sub,
