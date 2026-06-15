@@ -20,6 +20,11 @@ WORKDIR /app
 # Copy Nuxt server output
 COPY --from=build /app/.output ./.output
 
+# package.json is needed at runtime for:
+#   - prisma db seed (reads the "prisma.seed" script)
+#   - prisma migrate deploy (reads the prisma.schema path)
+COPY --from=build /app/package.json ./package.json
+
 # Copy Prisma schema and migration files (needed for migrate deploy)
 COPY --from=build /app/prisma ./prisma
 
