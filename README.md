@@ -28,10 +28,12 @@ This quiz tool is intended to be run on-prem in IT-projects or the like. The cor
 
 ### Basic architecture
 
-> /app # frontend
-> /server # backend for frontend
-> /prisma # data models and migrations- code first
-> /tests # unit tests for server and playwright tests for backend
+```
+/app # frontend
+/server # backend for frontend
+/prisma # data models and migrations- code first
+/tests # unit tests for server and playwright tests for backend
+```
 
 See the `docker-compose.yml` for the composition of services.
 
