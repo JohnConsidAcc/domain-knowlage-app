@@ -79,3 +79,7 @@ See instructions in `.env.prod.example`
 To seed the database with example questions
 
 > docker exec dka-prod-app-1 npx prisma db seed
+
+## License
+
+[GNU Affero General Public License v3.0](https://github.com/fauh/xenopairings/blob/master/LICENSE) — free to use, modify, and distribute, but any modified version deployed as a network service must also be open source under the same license.
