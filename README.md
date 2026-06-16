@@ -2,16 +2,20 @@
 
 This project is a quiz tool.
 
+## Utvecklat med
+
+Claude Code (agentdriven utveckling) as part of the course Next-Generation Software Development with AI.
+
 ## What it does
 
 This quiz tool is intended to be run on-prem in IT-projects or the like. The core idea is to have AI generate questions based on the code, confluence or other documents, as well as the AI's inherent knownlage in the respective domain.
 
 - Project members can then use the tool in a leisurely manner to retain knowlage or get back up to speed after vacation.
 
-## Getting started with development
+### Technology stack
 
-### Requirements
-
+- Docker (Docker compose)
+- Nodejs
 - Vue
 - Postgres
 - Prisma
@@ -19,6 +23,8 @@ This quiz tool is intended to be run on-prem in IT-projects or the like. The cor
 - Nginx
 - Vitest
 - Playwright
+
+## Getting started with development
 
 ### Run for development
 
