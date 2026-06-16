@@ -4,12 +4,61 @@ This project is a quiz tool.
 
 ## What it does
 
-## Getting started
+This quiz tool is intended to be run on-prem in IT-projects or the like. The core idea is to have AI generate questions based on the code, confluence or other documents, as well as the AI's inherent knownlage in the respective domain.
+
+- Project members can then use the tool in a leisurely manner to retain knowlage or get back up to speed after vacation.
+
+## Getting started with development
 
 ### Requirements
 
-### Installation
+- Vue
+- Postgres
+- Prisma
+- Keycloak
+- Nginx
+- Vitest
+- Playwright
+
+### Run for development
+
+Start the backend containers
+
+> npm run docker:up
+
+Install javascript dependencies
+
+> npm install
+
+Setup the tables in the database
+
+> npm run db:migrate
+
+Seed the database with example questions
+
+> npm run db:seed
+
+Run the dev server in the terminal
+
+> npm run dev
+
+Go to localhost:3000
+
+## Run in production
+
+### Requirements - Production
+
+- Node
+- Docker (Docker compose)
 
 ### Configuration
 
+See instructions in `.env.prod.example`
+
 ### Running the project
+
+> npm run docker:prod:up
+
+To seed the database with example questions
+
+> docker exec dka-prod-app-1 npx prisma db seed
